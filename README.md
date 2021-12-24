@@ -3,7 +3,7 @@
 ## Abstract：
 Accurate and fast scene understanding is one of the challenging task for autonomous driving, which requires to take full advantage of LiDAR point clouds for semantic segmentation. In this paper, we present a simple and efficient image-based semantic segmentation network, named SENet. In order to improve the descriptive power of learned features and reduce the computational as well as time complexity, our SENet integrates the convolution with larger kernel size instead of MLP, carefully-selected activation functions, and multiple auxiliary segmentation heads with corresponding loss functions into architecture. Quantitative and qualitative experiments conducted on publicly available benchmarks, SemanticKITTI and SemanticPOSS, demonstrate that our pipeline achieves much better mIoU and inference performance compared with state-of-the-art models.
 
-## Prepare
+## Prepare：
 Download SemanticKITTI from [official web](http://www.semantic-kitti.org/dataset.html).
 
 Download SemanticPOSS from [official web](http://www.poss.pku.edu.cn./download.html).
@@ -50,7 +50,7 @@ Download SemanticPOSS from [official web](http://www.poss.pku.edu.cn./download.h
 ### Pretrained Model and Logs:
 Coming soon.
 
-### TODO List
+### TODO List：
 
 - [ ] Release Pretrained Model and Logs.
 - [ ] Try TensorRT acceleration.
@@ -60,4 +60,4 @@ Coming soon.
 Code framework derived from from [SalsaNext](https://github.com/Halmstad-University/SalsaNext). Models are heavily based on [FIDNet](https://github.com/placeforyiming/IROS21-FIDNet-SemanticKITTI). Part of code from [SqueezeSegV3](https://github.com/chenfengxu714/SqueezeSegV3). Thanks to their open source code, and also to [Ph.D. Zhao](https://github.com/placeforyiming) for some helpful discussions.
 
 ### Citation：
-Soon
+Soon.
