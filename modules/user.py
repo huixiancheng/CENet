@@ -7,7 +7,7 @@ import torch.backends.cudnn as cudnn
 import time
 import os
 import numpy as np
-from postproc.KNN import KNN, NN_filter
+from postproc.KNN import KNN
 
 
 class User():
@@ -41,11 +41,11 @@ class User():
     with torch.no_grad():
         torch.nn.Module.dump_patches = True
         if self.ARCH["train"]["pipeline"] == "hardnet":
-            from modules.HarDNet import HarDNet
+            from modules.network.HarDNet import HarDNet
             self.model = HarDNet(self.parser.get_n_classes(), self.ARCH["train"]["aux_loss"])
 
         if self.ARCH["train"]["pipeline"] == "res":
-            from modules.ResNet import ResNet_34
+            from modules.network.ResNet import ResNet_34
             self.model = ResNet_34(self.parser.get_n_classes(), self.ARCH["train"]["aux_loss"])
 
             def convert_relu_to_softplus(model, act):
@@ -61,7 +61,7 @@ class User():
                 convert_relu_to_softplus(self.model, nn.SiLU())
 
         if self.ARCH["train"]["pipeline"] == "fid":
-            from modules.Fid import ResNet_34
+            from modules.network.Fid import ResNet_34
             self.model = ResNet_34(self.parser.get_n_classes(), self.ARCH["train"]["aux_loss"])
 
             if self.ARCH["train"]["act"] == "Hardswish":

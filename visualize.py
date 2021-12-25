@@ -93,7 +93,7 @@ if __name__ == '__main__':
             print("Opening config file of POSS")
             CFG = yaml.safe_load(open('config/labels/semantic-poss.yaml', 'r'))
         else:
-            raise TypeError("This type dataset doesn't exist! Exiting...")
+            raise TypeError("This type dataset doesn't exist (use kitti or poss)! Exiting...")
 
     except Exception as e:
         raise TypeError("Error opening yaml file.")

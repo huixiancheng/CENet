@@ -1,6 +1,5 @@
 import yaml
 import os
-import random
 import torch
 import time
 import numpy as np
@@ -32,7 +31,7 @@ for seq in DATA["split"]["test"]:
 
 with torch.no_grad():
     if ARCH["train"]["pipeline"] == "res":
-        from modules.ResNet import ResNet_34
+        from modules.network.ResNet import ResNet_34
         model = ResNet_34(20, ARCH["train"]["aux_loss"])
         def convert_relu_to_softplus(model, act):
             for child_name, child in model.named_children():
@@ -52,7 +51,8 @@ model.load_state_dict(w_dict['state_dict'], strict=True)
 
 post = None
 
-from postproc.KNN import KNN, NN_filter
+from postproc.KNN import KNN
+
 if ARCH["post"]["KNN"]["use"]:
     post = KNN(ARCH["post"]["KNN"]["params"], 20)
 
@@ -72,7 +72,7 @@ if split == 'valid':
 else:
     all_seq_list = ['11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21']
 
-from common.laserscan import LaserScan, SemLaserScan
+from common.laserscan import LaserScan
 
 sensor = ARCH["dataset"]["sensor"]
 max_points = ARCH["dataset"]["max_points"]

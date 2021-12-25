@@ -1,22 +1,11 @@
 #!/usr/bin/env python3
 # This file is covered by the LICENSE file in the root of this project.
 
-import torch
 import torch.nn as nn
-import torch.optim as optim
-import torch.nn.functional as F
 from common.avgmeter import *
 import torch.backends.cudnn as cudnn
-import imp
-import yaml
 import time
-from PIL import Image
-import __init__ as booger
-import collections
-import copy
-import cv2
 import os
-import numpy as np
 
 from postproc.KNN import KNN
 from modules.ioueval import *
@@ -67,7 +56,7 @@ class User():
     with torch.no_grad():
         torch.nn.Module.dump_patches = True
         if self.ARCH["train"]["pipeline"] == "res":
-            from modules.ResNet import ResNet_34
+            from modules.network.ResNet import ResNet_34
             self.model = ResNet_34(self.parser.get_n_classes(), self.ARCH["train"]["aux_loss"])
 
             def convert_relu_to_softplus(model, act):
@@ -83,7 +72,7 @@ class User():
                 convert_relu_to_softplus(self.model, nn.SiLU())
 
         if self.ARCH["train"]["pipeline"] == "fid":
-            from modules.Fid import ResNet_34
+            from modules.network.Fid import ResNet_34
             self.model = ResNet_34(self.parser.get_n_classes(), self.ARCH["train"]["aux_loss"])
 
     w_dict = torch.load(modeldir + "/SENet_valid_best",
@@ -177,8 +166,7 @@ class User():
       proj_x = proj_x.cuda()
       proj_y = proj_y.cuda()
 
-      from tqdm import tqdm
-      for i, (proj_in, proj_labels, tags, unlabels, path_seq, path_name, proj_range, unresizerange, unproj_range, _, _) in enumerate(loader):
+for i, (proj_in, proj_labels, tags, unlabels, path_seq, path_name, proj_range, unresizerange, unproj_range, _, _) in enumerate(loader):
         # first cut to rela size (batch size one allows it)
 
         proj_in = proj_in.cuda()

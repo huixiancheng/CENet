@@ -4,19 +4,17 @@ import datetime
 import os
 import time
 import cv2
-import torch
 import torch.backends.cudnn as cudnn
 import torch.nn as nn
-import numpy as np
 import torch.optim as optim
 from matplotlib import pyplot as plt
 from common.avgmeter import *
 from torch.utils.tensorboard import SummaryWriter
 from common.sync_batchnorm.batchnorm import convert_model
-from common.warmupLR import *
+from modules.scheduler.warmupLR import *
 from modules.ioueval import *
-from modules.Lovasz_Softmax import Lovasz_softmax
-from modules.cosine import CosineAnnealingWarmUpRestarts
+from modules.losses.Lovasz_Softmax import Lovasz_softmax
+from modules.scheduler.cosine import CosineAnnealingWarmUpRestarts
 
 from tqdm import tqdm
 
@@ -97,11 +95,11 @@ class Trainer():
 
         with torch.no_grad():
             if self.ARCH["train"]["pipeline"] == "hardnet":
-                from modules.HarDNet import HarDNet
+                from modules.network.HarDNet import HarDNet
                 self.model = HarDNet(self.parser.get_n_classes(), self.ARCH["train"]["aux_loss"])
 
             if self.ARCH["train"]["pipeline"] == "res":
-                from modules.ResNet import ResNet_34
+                from modules.network.ResNet import ResNet_34
                 self.model = ResNet_34(self.parser.get_n_classes(), self.ARCH["train"]["aux_loss"])
 
                 def convert_relu_to_softplus(model, act):
@@ -116,7 +114,7 @@ class Trainer():
                     convert_relu_to_softplus(self.model, nn.SiLU())
 
             if self.ARCH["train"]["pipeline"] == "fid":
-                from modules.Fid import ResNet_34
+                from modules.network.Fid import ResNet_34
                 self.model = ResNet_34(self.parser.get_n_classes(), self.ARCH["train"]["aux_loss"])
 
                 if self.ARCH["train"]["act"] == "Hardswish":
@@ -154,7 +152,7 @@ class Trainer():
 
         self.criterion = nn.NLLLoss(weight=self.loss_w).to(self.device)
         self.ls = Lovasz_softmax(ignore=0).to(self.device)
-        from modules.boundary_loss import BoundaryLoss
+        from modules.losses.boundary_loss import BoundaryLoss
         self.bd = BoundaryLoss().to(self.device)
         # loss as dataparallel too (more images in batch)
         if self.n_gpus > 1:
