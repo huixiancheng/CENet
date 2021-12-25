@@ -83,7 +83,7 @@ if __name__ == '__main__':
         from common.posslaserscan import LaserScan, SemLaserScan
         from common.posslaserscanvis import LaserScanVis
     else:
-        raise TypeError("This type dataset doesn't exist! Exiting...")
+        raise TypeError("This type dataset doesn't exist (use kitti or poss)! Exiting...")
     # open config file
     try:
         if FLAGS.what == "kitti":
