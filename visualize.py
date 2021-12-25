@@ -134,7 +134,7 @@ if __name__ == '__main__':
         if os.path.isdir(label_paths):
             print("Labels folder exists! Using labels from %s" % label_paths)
         else:
-            raise TypeError("Labels folder doesn't exist! Exiting...")
+            raise TypeError("Labels folder doesn't exist from %s ! Exiting..." % label_paths)
 
         # populate the pointclouds
         label_names = [os.path.join(dp, f) for dp, dn, fn in os.walk(
