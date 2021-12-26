@@ -12,7 +12,7 @@ Download SemanticKITTI from [official web](http://www.semantic-kitti.org/dataset
 
     `python train.py -d /your_dataset -ac config/arch/senet-512.yml -n senet-512`
 
-    Note that the following training strategy is used due to GPU and time constraints, see res.sh for details.
+    Note that the following training strategy is used due to GPU and time constraints, see [kitti.sh](https://github.com/huixiancheng/SENet/blob/main/kitti.sh) for details.
 
     First train the model with 64x512 inputs. Then load the pre-trained model to train the model with 64x1024 inputs, and finally load the pre-trained model to train the model with 64x2048 inputs.
 
