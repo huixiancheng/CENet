@@ -48,7 +48,7 @@ Download SemanticKITTI from [official web](http://www.semantic-kitti.org/dataset
 
 - Visualize Predictions:
 
-  `python visualize.py -w kitti/poss -p /your_predictions -s what_sequences`
+  `python visualize.py -w kitti/poss -d /your_dataset -p /your_predictions -s what_sequences`
 
 
 ### Pretrained Model and Logs:
