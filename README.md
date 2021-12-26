@@ -15,6 +15,8 @@ Download SemanticKITTI from [official web](http://www.semantic-kitti.org/dataset
     Note that the following training strategy is used due to GPU and time constraints, see [kitti.sh](https://github.com/huixiancheng/SENet/blob/main/kitti.sh) for details.
 
     First train the model with 64x512 inputs. Then load the pre-trained model to train the model with 64x1024 inputs, and finally load the pre-trained model to train the model with 64x2048 inputs.
+    
+    Also, for this reason, if you want to resume training from a breakpoint, uncomment [this section](https://github.com/huixiancheng/SENet/blob/c5827853ee32660ad9487a679890822ac9bf8bf8/modules/trainer.py#L193-L203) and change "/SENet_valid_best" to "/SENet".
 
 - SemanticPOSS:
 
