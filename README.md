@@ -55,11 +55,15 @@ Download SemanticKITTI from [official web](http://www.semantic-kitti.org/dataset
   `python visualize.py -w kitti/poss -d /your_dataset -p /your_predictions -s what_sequences`
 
 
-### Pretrained Model and Logs:
-Coming soon.
+### Pretrained Models and Logs:
+| **KITTI Result** | **POSS Result** | **Ablation Study** | **Backbone HarDNet** |
+| ---------------- | --------------- | ------------------ | -------------------- |
+| [Google Drive](https://drive.google.com/file/d/1umCahiOv_O64mlIhWAGvvBrM4G1njuNX/view?usp=sharing) | [Google Drive](https://drive.google.com/file/d/1DC66ky6k2aBpVg1Md1AR2tjqHzSYL5xC/view?usp=sharing) | [Google Drive](https://drive.google.com/file/d/1axrBYJflKMn0FLoC6HoN1G4RUmitIP1U/view?usp=sharing) | [Google Drive](https://drive.google.com/file/d/1afer0OX0WzxoMIWXV-btGVC7llt-4nUB/view?usp=sharing) |
+
+**2021-12-29 [:sweat_smile:]** Release models and training logs, which also contains ablation studies. (Please note that due to multiple updates of the code, some models and configs have inconsistencies that lead to errors, please make corresponding changes according to the specific situation.)
 
 ### TODO List:
-- [ ] Release Pretrained Model and Logs.
+- [x] Release Pretrained Model and Logs.
 - [ ] Try TensorRT acceleration.
 - [ ] To make NLA adaptation framework, See [here](https://github.com/huixiancheng/SENet/blob/57d3e07777099c805fa27ceda68e359b2b7ae12d/modules/user.py#L178-L194).
 
