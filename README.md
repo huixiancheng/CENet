@@ -1,5 +1,5 @@
 # SENet: Toward Simple and Efficient LiDAR Semantic Segmentation for Autonomous Driving 
-**2021-12-29 [:sunglasses:]** SENet was very lucky to be provisionally accepted by ICME 2022.
+**2022-03-07 [:sunglasses:]** SENet was very lucky to be provisionally accepted by ICME 2022.
 
 **2021-12-29 [:sweat_smile:]** Release models and training logs, which also contains ablation studies. (Please note that due to multiple updates of the code, some models and configs have inconsistencies that lead to errors, please make corresponding changes according to the specific situation.)
 ## Abstract：
