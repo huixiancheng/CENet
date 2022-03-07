@@ -1,5 +1,7 @@
 # SENet: Toward Simple and Efficient LiDAR Semantic Segmentation for Autonomous Driving 
-(Provisionally Accepted By ICME'22)
+**2021-12-29 [:sunglasses:]** SENet was very lucky to be provisionally accepted by ICME 2022.
+
+**2021-12-29 [:sweat_smile:]** Release models and training logs, which also contains ablation studies. (Please note that due to multiple updates of the code, some models and configs have inconsistencies that lead to errors, please make corresponding changes according to the specific situation.)
 ## Abstract：
 Accurate and fast scene understanding is one of the challenging task for autonomous driving, which requires to take full advantage of LiDAR point clouds for semantic segmentation. In this paper, we present a simple and efficient image-based semantic segmentation network, named SENet. In order to improve the descriptive power of learned features and reduce the computational as well as time complexity, our SENet integrates the convolution with larger kernel size instead of MLP, carefully-selected activation functions, and multiple auxiliary segmentation heads with corresponding loss functions into architecture. Quantitative and qualitative experiments conducted on publicly available benchmarks, SemanticKITTI and SemanticPOSS, demonstrate that our pipeline achieves much better mIoU and inference performance compared with state-of-the-art models.
 
@@ -60,7 +62,6 @@ Download SemanticKITTI from [official web](http://www.semantic-kitti.org/dataset
 | ---------------- | --------------- | ------------------ | -------------------- |
 | [Google Drive](https://drive.google.com/file/d/1umCahiOv_O64mlIhWAGvvBrM4G1njuNX/view?usp=sharing) | [Google Drive](https://drive.google.com/file/d/1DC66ky6k2aBpVg1Md1AR2tjqHzSYL5xC/view?usp=sharing) | [Google Drive](https://drive.google.com/file/d/1axrBYJflKMn0FLoC6HoN1G4RUmitIP1U/view?usp=sharing) | [Google Drive](https://drive.google.com/file/d/1afer0OX0WzxoMIWXV-btGVC7llt-4nUB/view?usp=sharing) |
 
-**2021-12-29 [:sweat_smile:]** Release models and training logs, which also contains ablation studies. (Please note that due to multiple updates of the code, some models and configs have inconsistencies that lead to errors, please make corresponding changes according to the specific situation.)
 
 ## TODO List:
 - [x] Release Pretrained Model and Logs.
