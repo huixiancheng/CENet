@@ -76,30 +76,4 @@ class BoundaryLoss(nn.Module):
         return loss
 
 
-# for debug
-# if __name__ == "__main__":
-#     import torch.optim as optim
-#     from torchvision.models import segmentation
-#
-#     device = 'cuda' if torch.cuda.is_available() else 'cpu'
-#
-#     img = torch.randn(1, 3, 224, 224).to(device)
-#     gt = torch.randint(0, 10, (1, 224, 224)).to(device)
-#     model = segmentation.fcn_resnet50(num_classes=10).to(device)
-#
-#     pic = cv2.imread(r"C:\Users\Aragaki Yui\Desktop\tu\02.jpg")
-#     print(pic.shape)
-#     cv2.imshow('a',pic)
-#     cv2.waitKey(0)
-#     optimizer = optim.Adam(model.parameters(), lr=0.0001)
-#     criterion = BoundaryLoss()
-#
-#     y = model(img)
-#
-#     loss = criterion(y['out'], gt)
-#
-#     optimizer.zero_grad()
-#     loss.backward()
-#     optimizer.step()
-#
-#     print(loss)
+
