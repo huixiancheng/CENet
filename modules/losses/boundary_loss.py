@@ -54,7 +54,16 @@ class BoundaryLoss(nn.Module):
             1 - pred, kernel_size=self.theta0, stride=1, padding=(self.theta0 - 1) // 2)
         pred_b -= 1 - pred
 
-
+        # Visualization Boundary
+        # gt_bv = gt_b.detach().cpu().numpy()
+        # # cv2.imshow('gt_b', gt_bv[0][1])
+        # cv2.imwrite('gt_b.png', gt_bv[0][1]*255)
+        #
+        # pred_bv = pred_b.detach().cpu().numpy()
+        # # cv2.imshow('pred_b', pred_bv[0][1])
+        # cv2.imwrite('pred_b.png', pred_bv[0][1]*255)
+        # cv2.waitKey(0)
+        
         # reshape
 #         gt_b = gt_b[:, 1:, :, :]
 #         pred_b = pred_b[:, 1:, :, :]
