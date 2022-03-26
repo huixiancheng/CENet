@@ -61,7 +61,7 @@ class BoundaryLoss(nn.Module):
             cv2.imwrite('gt_b_cls{}.png'.format(i), gt_bv[0][i]*255)
 
             pred_bv = pred_b.detach().cpu().numpy()
-            cv2.imshow('pred_b_cls{}'.format(i), pred_bv[0][i])
+            #cv2.imshow('pred_b_cls{}'.format(i), pred_bv[0][i])
             cv2.imwrite('pred_b_cls{}.png'.format(i), pred_bv[0][i]*255)
 
         
