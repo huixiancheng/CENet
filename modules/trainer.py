@@ -61,7 +61,7 @@ class Trainer():
         # get the data
         from dataset.kitti.parser import Parser
         self.parser = Parser(root=self.datadir,
-                                          train_sequences=self.DATA["split"]["valid"]+ self.DATA["split"]["train"],  #self.DATA["split"]["valid"]+ self.DATA["split"]["train"]
+                                          train_sequences=self.DATA["split"]["train"], # self.DATA["split"]["valid"] + self.DATA["split"]["train"] if finetune with valid
                                           valid_sequences=self.DATA["split"]["valid"],
                                           test_sequences=None,
                                           labels=self.DATA["labels"],
