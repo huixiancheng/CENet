@@ -237,28 +237,6 @@ class Trainer():
         out_img = np.concatenate([out_img, gt_color], axis=0)
         return (out_img).astype(np.uint8)
 
-    @staticmethod
-    def save_to_log(logdir, logger, info, epoch, w_summary=False, model=None, img_summary=False, imgs=[]):
-        # save scalars
-        for tag, value in info.items():
-            logger.add_scalar(tag, value, epoch)
-
-        # save summaries of weights and biases
-        if w_summary and model:
-            for tag, value in model.named_parameters():
-                tag = tag.replace('.', '/')
-                logger.histo_summary(tag, value.data.cpu().numpy(), epoch)
-                if value.grad is not None:
-                    logger.histo_summary(
-                        tag + '/grad', value.grad.data.cpu().numpy(), epoch)
-
-        if img_summary and len(imgs) > 0:
-            directory = os.path.join(logdir, "predictions")
-            if not os.path.isdir(directory):
-                os.makedirs(directory)
-            for i, img in enumerate(imgs):
-                name = os.path.join(directory, str(i) + ".png")
-                cv2.imwrite(name, img)
 
     def train(self):
 
