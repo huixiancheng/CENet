@@ -6,6 +6,8 @@ Accurate and fast scene understanding is one of the challenging task for autonom
    <img src="asssert/rank.jpg" width="40%"> 
 </p>
 
+**2022-07-06[:open_mouth::scream::thumbsup:]** [Ph.D. Hou](https://github.com/cardwing) reported an astounding 67.6% mIoU test performance of CENet, see [this issue](https://github.com/huixiancheng/CENet/issues/7) and [PVD Repo](https://github.com/cardwing/Codes-for-PVKD) for details.
+
 **2022-03-28[:sunglasses:]** Suggested by reviewer, renamed to CENet.
 
 **2022-03-07[:yum:]** SENet was very lucky to be ~~provisionally~~ accepted by ICME 2022.
