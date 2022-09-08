@@ -83,4 +83,13 @@ Download SemanticKITTI from [official web](http://www.semantic-kitti.org/dataset
 Code framework derived from [SalsaNext](https://github.com/Halmstad-University/SalsaNext). Models are heavily based on [FIDNet](https://github.com/placeforyiming/IROS21-FIDNet-SemanticKITTI). Part of code from [SqueezeSegV3](https://github.com/chenfengxu714/SqueezeSegV3). Thanks to their open source code, and also to [Ph.D. Zhao](https://github.com/placeforyiming) for some helpful discussions.
 
 ## Citation：
-Soon.
+~~~
+@inproceedings{cheng2022cenet,
+  title={Cenet: Toward Concise and Efficient Lidar Semantic Segmentation for Autonomous Driving},
+  author={Cheng, Hui--Xian and Han, Xian--Feng and Xiao, Guo--Qiang},
+  booktitle={2022 IEEE International Conference on Multimedia and Expo (ICME)},
+  pages={01--06},
+  year={2022},
+  organization={IEEE}
+}
+~~~
