@@ -306,8 +306,8 @@ class Trainer():
                      'info': self.info,
                      'scheduler': self.scheduler.state_dict()
                      }
-#             save_checkpoint(state, self.log, suffix="")
-            save_checkpoint(state, self.log, suffix=""+str(epoch))
+            save_checkpoint(state, self.log, suffix="")
+            # save_checkpoint(state, self.log, suffix=""+str(epoch))
 
             if self.info['train_iou'] > self.info['best_train_iou']:
                 save_to_log(self.log, 'log.txt', "Best mean iou in training set so far, save model!")
