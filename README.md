@@ -71,7 +71,7 @@ Download SemanticKITTI from [official web](http://www.semantic-kitti.org/dataset
 ## Pretrained Models and Logs:
 | **KITTI Result** | **POSS Result** | **Ablation Study** | **Backbone HarDNet** |
 | ---------------- | --------------- | ------------------ | -------------------- |
-| [Google Drive](https://drive.google.com/file/d/1umCahiOv_O64mlIhWAGvvBrM4G1njuNX/view?usp=sharing) | [Google Drive](https://drive.google.com/file/d/1DC66ky6k2aBpVg1Md1AR2tjqHzSYL5xC/view?usp=sharing) | [Google Drive](https://drive.google.com/file/d/1axrBYJflKMn0FLoC6HoN1G4RUmitIP1U/view?usp=sharing) | [Google Drive](https://drive.google.com/file/d/1afer0OX0WzxoMIWXV-btGVC7llt-4nUB/view?usp=sharing) |
+| [Google Drive](https://drive.google.com/file/d/167ofUNdkVnRoqZ28NAXRjykdVWnublUk/view?usp=share_link) | [Google Drive](https://drive.google.com/file/d/1DC66ky6k2aBpVg1Md1AR2tjqHzSYL5xC/view?usp=sharing) | [Google Drive](https://drive.google.com/file/d/1axrBYJflKMn0FLoC6HoN1G4RUmitIP1U/view?usp=sharing) | [Google Drive](https://drive.google.com/file/d/1afer0OX0WzxoMIWXV-btGVC7llt-4nUB/view?usp=sharing) |
 
 
 ## TODO List:
