@@ -8,9 +8,12 @@ Code for our paper:
 ## Abstract：
 Accurate and fast scene understanding is one of the challenging task for autonomous driving, which requires to take full advantage of LiDAR point clouds for semantic segmentation. In this paper, we present a simple and efficient image-based semantic segmentation network, named SENet. In order to improve the descriptive power of learned features and reduce the computational as well as time complexity, our SENet integrates the convolution with larger kernel size instead of MLP, carefully-selected activation functions, and multiple auxiliary segmentation heads with corresponding loss functions into architecture. Quantitative and qualitative experiments conducted on publicly available benchmarks, SemanticKITTI and SemanticPOSS, demonstrate that our pipeline achieves much better mIoU and inference performance compared with state-of-the-art models.
 
-<p align="center">
-   <img src="asssert/rank.jpg" width="40%"> 
-</p>
+
+
+**2023-03-28[NEW:sparkles:]** CENet achieves competitive performance in robustness evaluation at SemanticKITTI. See Repo of [Robo3D](https://github.com/ldkong1205/Robo3D) for more details.
+<div align="center">
+  <img src="assert/robustness.png"/>
+</div><br/>
 
 **2022-07-06[:open_mouth::scream::thumbsup:]** [Ph.D. Hou](https://github.com/cardwing) reported an astounding 67.6% mIoU test performance of CENet, see [this issue](https://github.com/huixiancheng/CENet/issues/7) and [PVD Repo](https://github.com/cardwing/Codes-for-PVKD) for details.
 
