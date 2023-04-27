@@ -30,8 +30,8 @@ if __name__ == '__main__':
     parser.add_argument(
         '--dataset', '-d',
         type=str,
-        required=True,
-        default=None,
+        required=False,
+        default='../SemanticKITTI/dataset',
         help='Dataset to train with. No Default',
     )
     parser.add_argument(
@@ -57,7 +57,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '--name', '-n',
         type=str,
-        default=None,
+        default='test',
         help='If you want to give an aditional discriptive name'
     )
     parser.add_argument(
