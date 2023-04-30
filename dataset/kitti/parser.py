@@ -3,7 +3,7 @@ import numpy as np
 import torch
 from torch.utils.data import Dataset
 from common.laserscan import LaserScan, SemLaserScan
-import torchvision
+from torchvision.transforms import ToTensor
 
 import torch
 import math
@@ -20,8 +20,11 @@ from collections.abc import Sequence, Iterable
 import warnings
 
 
+
+
 EXTENSIONS_SCAN = ['.bin']
 EXTENSIONS_LABEL = ['.label']
+EXTENSIONS_RGB = ['.png']
 
 
 def is_scan(filename):
@@ -30,6 +33,9 @@ def is_scan(filename):
 
 def is_label(filename):
   return any(filename.endswith(ext) for ext in EXTENSIONS_LABEL)
+
+def is_rgb(filename):
+  return any(filename.endswith(ext) for ext in EXTENSIONS_RGB)
 
 
 def my_collate(batch):
@@ -90,7 +96,7 @@ class SemanticKitti(Dataset):
     self.max_points = max_points
     self.gt = gt
     self.transform = transform
-
+    
     # get number of classes (can't be len(self.learning_map) because there
     # are multiple repeated entries, so the number that matters is how many
     # there are for the xentropy)
@@ -119,6 +125,7 @@ class SemanticKitti(Dataset):
     # placeholder for filenames
     self.scan_files = []
     self.label_files = []
+    self.rgb_files = []
 
     # fill in with names, checking that all sequences are complete
     for seq in self.sequences:
@@ -130,12 +137,15 @@ class SemanticKitti(Dataset):
       # get paths for each
       scan_path = os.path.join(self.root, seq, "velodyne")
       label_path = os.path.join(self.root, seq, "labels")
+      rgb_path = os.path.join(self.root, seq, "image_2")
 
       # get files
       scan_files = [os.path.join(dp, f) for dp, dn, fn in os.walk(
           os.path.expanduser(scan_path)) for f in fn if is_scan(f)]
       label_files = [os.path.join(dp, f) for dp, dn, fn in os.walk(
           os.path.expanduser(label_path)) for f in fn if is_label(f)]
+      rgb_files = [os.path.join(dp, f) for dp, dn, fn in os.walk(
+          os.path.expanduser(rgb_path)) for f in fn if is_rgb(f)]
 
       # check all scans have labels
       if self.gt:
@@ -144,10 +154,12 @@ class SemanticKitti(Dataset):
       # extend list
       self.scan_files.extend(scan_files)
       self.label_files.extend(label_files)
+      self.rgb_files.extend(rgb_files)
 
     # sort for correspondance
     self.scan_files.sort()
     self.label_files.sort()
+    self.rgb_files.sort()
 
     print("Using {} scans from sequences {}".format(len(self.scan_files),
                                                     self.sequences))
@@ -155,6 +167,9 @@ class SemanticKitti(Dataset):
   def __getitem__(self, index):
     # get item in tensor shape
     scan_file = self.scan_files[index]
+    img_transform = ToTensor()
+    rgb_data = img_transform(Image.open(self.rgb_files[index]).resize((512,170)))
+
     if self.gt:
       label_file = self.label_files[index]
 
@@ -254,9 +269,22 @@ class SemanticKitti(Dataset):
     path_split = path_norm.split(os.sep)
     path_seq = path_split[-3]
     path_name = path_split[-1].replace(".bin", ".label")
-
+    projected_data = [proj, 
+                      proj_mask, 
+                      proj_labels, 
+                      unproj_labels, 
+                      path_seq, 
+                      path_name, 
+                      proj_x, proj_y, 
+                      proj_range, 
+                      unproj_range, 
+                      proj_xyz, 
+                      unproj_xyz, 
+                      proj_remission, 
+                      unproj_remissions, 
+                      unproj_n_points]
     # return
-    return proj, proj_mask, proj_labels, unproj_labels, path_seq, path_name, proj_x, proj_y, proj_range, unproj_range, proj_xyz, unproj_xyz, proj_remission, unproj_remissions, unproj_n_points
+    return projected_data, rgb_data
 
   def __len__(self):
     return len(self.scan_files)
@@ -338,14 +366,6 @@ class Parser():
                                        transform=True,
                                        gt=self.gt)
 
-#     np.random.seed(0)
-#     dataset_size = len(self.train_dataset)
-#     indices = list(range(dataset_size))
-#     split = int(0.5 * dataset_size)
-#     np.random.shuffle(indices)
-#     train_indices = indices[:split]
-#     train_sampler = torch.utils.data.SubsetRandomSampler(train_indices)
-#     print('Subsample:', len(train_indices))
 
     def seed_worker(worker_id):
         worker_seed = torch.initial_seed() % 2**32
@@ -376,7 +396,7 @@ class Parser():
                                        gt=self.gt)
 
     self.validloader = torch.utils.data.DataLoader(self.valid_dataset,
-                                                   batch_size=self.batch_size,
+                                                   batch_size=self.batch_size*10,
                                                    shuffle=False,
                                                    num_workers=self.workers,
                                                    drop_last=True)

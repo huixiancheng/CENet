@@ -38,7 +38,7 @@ if __name__ == '__main__':
         '--arch_cfg', '-ac',
         type=str,
         required=False,
-        default='config/arch/senet-512.yml',
+        default='config/arch/fusion-512.yml',
         help='Architecture yaml cfg file. See /config/arch for sample. No default!',
     )
     parser.add_argument(

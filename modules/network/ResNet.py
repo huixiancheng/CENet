@@ -1,7 +1,14 @@
+import sys
+sys.path.append('/home/son/project/pham_wrapper/CENet')
+print(sys.path)
 import torch.nn as nn
 import torch
 from torch.nn import functional as F
 import numpy as np
+
+from third_party.SwinFusion.models.network_swinfusion1 import SwinFusion as net
+from torchvision.transforms.transforms import Resize
+
 
 def conv3x3(in_planes, out_planes, stride=1, groups=1, dilation=1):
     """3x3 convolution with padding"""
@@ -89,7 +96,7 @@ class BasicBlock(nn.Module):
 
 
 class ResNet_34(nn.Module):
-    def __init__(self, nclasses, aux, block=BasicBlock, layers=[3, 4, 6, 3], if_BN=True, zero_init_residual=False,
+    def __init__(self, nclasses, aux=False, block=BasicBlock, layers=[3, 4, 6, 3], if_BN=True, zero_init_residual=False,
                  norm_layer=None, groups=1, width_per_group=64):
         super(ResNet_34, self).__init__()
         if norm_layer is None:
@@ -183,42 +190,97 @@ class ResNet_34(nn.Module):
             res_4 = self.aux_head3(res_4)
             res_4 = F.softmax(res_4, dim=1)
 
-#             res_2 = self.aux_head1(x_2)
-#             res_2 = F.softmax(x_2, dim=1)
-
-#             res_3 = self.aux_head2(x_3)
-#             res_3 = F.softmax(x_3, dim=1)
-
-#             res_4 = self.aux_head3(x_4)
-#             res_4 = F.softmax(x_4, dim=1)
-
         if self.aux:
             return [out, res_2, res_3, res_4]
         else:
             return out
+        
+
+class Fusion(nn.Module):
+    def __init__(self, nclasses, aux = False, block=BasicBlock, layers=[3, 4, 6, 3], if_BN=True, zero_init_residual=False,
+                 norm_layer=None, groups=1, width_per_group=64):
+        super(Fusion, self).__init__()
+        self.aux = aux
+        self.transform = None
+        self.feature_extraction = FeatureExtractionBlock()
+        self.model = net(upscale=1, in_chans=3, img_size=128, window_size=8,
+                img_range=1., depths=[6, 6, 6, 6], embed_dim=60, num_heads=[6, 6, 6, 6],
+                mlp_ratio=2, upsampler=None, resi_connection='1conv')
+        self.semantic_output = nn.Conv2d(3, nclasses, 1)
 
 
+    def forward(self, x, rgb):
+        if x.size()[2:] != rgb.size()[2:]:
+            self.transform = Resize(x.size()[2:]) if self.transform is None else self.transform
+            rgb = self.transform(rgb)
 
+        x = self.feature_extraction(x)
+        x = self.model(x, rgb)
+        out = self.semantic_output(x)
+        out = F.softmax(out, dim=1)
+        if self.aux:
+            pass
+        else:
+            return out
+
+class FeatureExtractionBlock(nn.Module):
+    def __init__(self) -> None:
+        super().__init__()
+        self.conv1 = nn.Conv2d(5, 3, kernel_size=1, stride=1, padding=0, bias=False)
+        self.conv2 = nn.Conv2d(5, 3, kernel_size=3, stride=1, padding=1, bias=False)
+        self.conv3 = nn.Conv2d(5, 3, kernel_size=5, stride=1, padding=2, bias=False)
+
+        self.final_conv = nn.Conv2d(9, 3, kernel_size=3, stride=1, padding=1, bias=False)
+        self.bn1 = nn.BatchNorm2d(3)
+        self.bn2 = nn.BatchNorm2d(3)
+        self.bn3 = nn.BatchNorm2d(3)
+        self.bn_final = nn.BatchNorm2d(3)
+
+        self.activation = nn.ReLU(inplace=True)
+    
+    def forward(self, x):
+        x1, x2, x3 = self.conv1(x), self.conv2(x), self.conv3(x)
+        x1, x2, x3 = self.bn1(x1), self.bn2(x2), self.bn3(x3)
+        x1, x2, x3 = self.activation(x1), self.activation(x2), self.activation(x3)
+        x = torch.cat([x1, x2, x3], dim=1)
+        x = self.final_conv(x)
+        x = self.bn_final(x)
+        x = self.activation(x)
+        return x
 
 
 if __name__ == "__main__":
     import time
-    model = ResNet_34(20).cuda()
+    model = Fusion(20).cuda()
     pytorch_total_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
     print("Number of parameters: ", pytorch_total_params / 1000000, "M")
     time_train = []
     for i in range(20):
-        inputs = torch.randn(1, 5, 64, 2048).cuda()
+        input_3D = torch.randn(2, 5, 64, 512).cuda()
+        input_rgb = torch.randn(2, 3, 452, 1032).cuda()
         model.eval()
         with torch.no_grad():
           start_time = time.time()
-          outputs = model(inputs)
+          outputs = model(input_3D, input_rgb)
         torch.cuda.synchronize()  # wait for cuda to finish (cuda is asynchronous!)
         fwt = time.time() - start_time
         time_train.append(fwt)
         print ("Forward time per img: %.3f (Mean: %.3f)" % (
           fwt / 1, sum(time_train) / len(time_train) / 1))
         time.sleep(0.15)
+
+    # for i in range(20):
+    #     inputs = torch.randn(1, 5, 64, 2048).cuda()
+    #     model.eval()
+    #     with torch.no_grad():
+    #       start_time = time.time()
+    #       outputs = model(inputs)
+    #     torch.cuda.synchronize()  # wait for cuda to finish (cuda is asynchronous!)
+    #     fwt = time.time() - start_time
+    #     time_train.append(fwt)
+    #     print ("Forward time per img: %.3f (Mean: %.3f)" % (
+    #       fwt / 1, sum(time_train) / len(time_train) / 1))
+    #     time.sleep(0.15)
 
 
 
