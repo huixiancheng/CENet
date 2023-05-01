@@ -396,7 +396,7 @@ class Parser():
                                        gt=self.gt)
 
     self.validloader = torch.utils.data.DataLoader(self.valid_dataset,
-                                                   batch_size=self.batch_size*10,
+                                                   batch_size=self.batch_size,
                                                    shuffle=False,
                                                    num_workers=self.workers,
                                                    drop_last=True)

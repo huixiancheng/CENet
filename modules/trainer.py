@@ -31,6 +31,13 @@ def save_checkpoint(to_save, logdir, suffix=""):
     # Save the weights
     torch.save(to_save, logdir +
                "/SENet" + suffix)
+    
+def convert_relu_to_softplus(model, act):
+    for child_name, child in model.named_children():
+        if isinstance(child, nn.LeakyReLU):
+            setattr(model, child_name, act)
+        else:
+            convert_relu_to_softplus(child, act)
 
 
 class Trainer():
@@ -101,13 +108,6 @@ class Trainer():
             if self.ARCH["train"]["pipeline"] == "res":
                 from modules.network.ResNet import ResNet_34
                 self.model = ResNet_34(self.parser.get_n_classes(), self.ARCH["train"]["aux_loss"])
-
-                def convert_relu_to_softplus(model, act):
-                    for child_name, child in model.named_children():
-                        if isinstance(child, nn.LeakyReLU):
-                            setattr(model, child_name, act)
-                        else:
-                            convert_relu_to_softplus(child, act)
                 if self.ARCH["train"]["act"] == "Hardswish":
                     convert_relu_to_softplus(self.model, nn.Hardswish())
                 elif self.ARCH["train"]["act"] == "SiLU":
@@ -116,6 +116,10 @@ class Trainer():
             if self.ARCH["train"]["pipeline"] == "fusion":
                 from modules.network.ResNet import Fusion
                 self.model = Fusion(self.parser.get_n_classes(), self.ARCH["train"]["aux_loss"])
+                if self.ARCH["train"]["act"] == "Hardswish":
+                    convert_relu_to_softplus(self.model, nn.Hardswish())
+                elif self.ARCH["train"]["act"] == "SiLU":
+                    convert_relu_to_softplus(self.model, nn.SiLU())
 
             if self.ARCH["train"]["pipeline"] == "fid":
                 from modules.network.Fid import ResNet_34
@@ -377,6 +381,7 @@ class Trainer():
         acc = AverageMeter()
         iou = AverageMeter()
         bd = AverageMeter()
+        learning_rate = AverageMeter()
 
         # empty the cache to train now
         if self.gpu:
@@ -401,16 +406,22 @@ class Trainer():
             with torch.cuda.amp.autocast():
                 if self.ARCH["train"]["aux_loss"]:
                     if 'fusion' in self.ARCH["train"]["pipeline"]:
-                        [output, z2, z4, z8] = model(in_vol,rgb_data)
+                        out = model(in_vol,rgb_data) #[output, z2, z4, z8]
                     else:
-                        [output, z2, z4, z8] = model(in_vol)
+                        out = model(in_vol)
                     lamda = self.ARCH["train"]["lamda"]
-                    bdlosss = self.bd(output, proj_labels.long()) + lamda*self.bd(z2, proj_labels.long()) + lamda*self.bd(z4, proj_labels.long()) + lamda*self.bd(z8, proj_labels.long())
-                    loss_m0 = criterion(torch.log(output.clamp(min=1e-8)), proj_labels) + 1.5 * self.ls(output, proj_labels.long())
-                    loss_m2 = criterion(torch.log(z2.clamp(min=1e-8)), proj_labels) + 1.5 * self.ls(z2, proj_labels.long())
-                    loss_m4 = criterion(torch.log(z4.clamp(min=1e-8)), proj_labels) + 1.5 * self.ls(z4, proj_labels.long())
-                    loss_m8 = criterion(torch.log(z8.clamp(min=1e-8)), proj_labels) + 1.5 * self.ls(z8, proj_labels.long())
-                    loss_m = loss_m0 + lamda*loss_m2 + lamda*loss_m4 + lamda*loss_m8 + bdlosss
+
+                    ## SUM POSITION LOSSES
+                    for j in range(len(out)):
+                        if j == 0:
+                            bdlosss = self.bd(out[j], proj_labels.long())
+                            loss_mn = criterion(torch.log(out[j].clamp(min=1e-8)), proj_labels) + 1.5 * self.ls(out[j], proj_labels.long())
+                        else:
+                            bdlosss += lamda*self.bd(out[j], proj_labels.long())
+                            loss_mn += lamda*criterion(torch.log(out[j].clamp(min=1e-8)), proj_labels) + 1.5 * self.ls(out[j], proj_labels.long())
+
+                    loss_m = loss_mn + bdlosss
+                    output = out[0]
                 else:
                     if 'fusion' in self.ARCH["train"]["pipeline"]:
                         output = model(in_vol,rgb_data)
@@ -444,6 +455,8 @@ class Trainer():
 
             for g in self.optimizer.param_groups:
                 lr = g["lr"]
+            learning_rate.update(lr, 1)
+
 
             if show_scans:
                 if i % self.ARCH["train"]["save_batch"] == 0:
@@ -517,17 +530,14 @@ class Trainer():
                     proj_labels = proj_labels.cuda(non_blocking=True).long()
                 rgb_data = rgb_data.cuda()
                 # compute output
-                if self.ARCH["train"]["aux_loss"]:
-                    if 'fusion' in self.ARCH["train"]["pipeline"]:
-                        [output, z2, z4, z8] = model(in_vol,rgb_data)
-                    else:
-                        [output, z2, z4, z8] = model(in_vol)
+                if 'fusion' in self.ARCH["train"]["pipeline"]:
+                    output = model(in_vol,rgb_data)
                 else:
-                    if 'fusion' in self.ARCH["train"]["pipeline"]:
-                        output = model(in_vol,rgb_data)
-                    else:
-                        output = model(in_vol)
+                    output = model(in_vol)
 
+                if self.ARCH["train"]["aux_loss"]:
+                    output = output[0]
+            
                 log_out = torch.log(output.clamp(min=1e-8))
                 jacc = self.ls(output, proj_labels)
                 wce = criterion(log_out, proj_labels)
