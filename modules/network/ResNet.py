@@ -1,7 +1,17 @@
+import sys
+sys.path.append('/home/son/project/pham_wrapper/CENet')
+print(sys.path)
 import torch.nn as nn
 import torch
 from torch.nn import functional as F
 import numpy as np
+from torchvision.models.segmentation import fcn_resnet50, FCN_ResNet50_Weights, deeplabv3_resnet50
+from torchvision.models.detection import fasterrcnn_resnet50_fpn_v2
+from torchvision.models.detection.backbone_utils import resnet_fpn_backbone
+
+from third_party.SwinFusion.models.network_swinfusion import SwinFusion as net
+from torchvision.transforms.transforms import Resize
+
 
 def conv3x3(in_planes, out_planes, stride=1, groups=1, dilation=1):
     """3x3 convolution with padding"""
@@ -89,7 +99,7 @@ class BasicBlock(nn.Module):
 
 
 class ResNet_34(nn.Module):
-    def __init__(self, nclasses, aux, block=BasicBlock, layers=[3, 4, 6, 3], if_BN=True, zero_init_residual=False,
+    def __init__(self, nclasses, aux=False, block=BasicBlock, layers=[3, 4, 6, 3], if_BN=True, zero_init_residual=False,
                  norm_layer=None, groups=1, width_per_group=64):
         super(ResNet_34, self).__init__()
         if norm_layer is None:
@@ -183,42 +193,196 @@ class ResNet_34(nn.Module):
             res_4 = self.aux_head3(res_4)
             res_4 = F.softmax(res_4, dim=1)
 
-#             res_2 = self.aux_head1(x_2)
-#             res_2 = F.softmax(x_2, dim=1)
-
-#             res_3 = self.aux_head2(x_3)
-#             res_3 = F.softmax(x_3, dim=1)
-
-#             res_4 = self.aux_head3(x_4)
-#             res_4 = F.softmax(x_4, dim=1)
-
         if self.aux:
             return [out, res_2, res_3, res_4]
         else:
             return out
+        
+class Fusion(nn.Module):
+    def __init__(self,nclasses, aux = True) -> None:
+        super().__init__()
+        self.num_classes = nclasses
+        self.aux = aux
+        self.backbone  = resnet_fpn_backbone('resnet50', weights='ResNet50_Weights.IMAGENET1K_V2', trainable_layers=5) 
+        self.feature_extract = FeatureExtractionBlock()
+        self.init_conv = BasicConv2d(5, 3, kernel_size=3, padding=1)
+        self.feature_reduction_1 =BasicConv2d(256, 128, kernel_size=1, padding=0)
+        self.feature_reduction_2 =BasicConv2d(128, 64, kernel_size=1, padding=0)
+        self.predict_com =BasicConv2d(64*4, self.num_classes, kernel_size=1, padding=0)
+        self.predict =BasicConv2d(64, self.num_classes, kernel_size=1, padding=0)
+
+    def forward(self, x, rgb):
+        x_feature = self.feature_extract(x)
+        x = self.init_conv(x)
+        x = self.backbone(x)
+        x.pop("pool")
+        x.pop("3")
+        x = list(x.values())
+        x = [x_feature] + x
+        for i, feature in enumerate(x):
+            x[i] = self.feature_reduction_2(self.feature_reduction_1(F.interpolate(feature, size=x_feature.size()[2:], mode='bilinear', align_corners=True)))
+
+        final_predict = self.predict_com(torch.cat(x, dim=1))
+        final_predict = F.softmax(final_predict, dim=1)
+        if self.aux:
+            predict_1 = F.softmax(self.predict(x[1]), dim=1)
+            predict_2 = F.softmax(self.predict(x[2]), dim=1)
+            predict_3 = F.softmax(self.predict(x[3]), dim=1)
+            return [final_predict, predict_1, predict_2, predict_3]
+        else:
+            return final_predict
 
 
 
+
+
+
+        return x
+        
+# class Fusion(nn.Module):
+#     def __init__(self, nclasses, aux = True, block=BasicBlock, layers=[3, 4, 6, 3], if_BN=True, zero_init_residual=False,
+#                  norm_layer=None, groups=1, width_per_group=64):
+#         super(Fusion, self).__init__()
+#         self.num_classes = nclasses
+#         self.aux = aux
+
+#         self.conv3_1 = BasicConv2d(5, 3, kernel_size=3, padding=1)
+
+#         self.model = deeplabv3_resnet50(weights = None, num_classes = nclasses, aux_loss = True, weights_backbone = "ResNet50_Weights.IMAGENET1K_V2")
+#         print(self.model)
+
+#     def forward(self, x, rgb):
+
+#         x = self.conv3_1(x)
+#         out = self.model(x)
+#         if self.aux:
+    
+#             return [F.softmax(out["out"],dim=1), F.softmax(out["aux"],dim=1)]
+#         else:
+
+#             return F.softmax(out["out"],dim=1)
+        
+
+
+
+# class Fusion(nn.Module):
+#     def __init__(self, nclasses, aux = True, block=BasicBlock, layers=[3, 4, 6, 3], if_BN=True, zero_init_residual=False,
+#                  norm_layer=None, groups=1, width_per_group=64):
+#         super(Fusion, self).__init__()
+#         self.num_classes = nclasses
+#         self.aux = aux
+
+#         self.conv3_1 = BasicConv2d(5, 3, kernel_size=3, padding=1)
+#         self.conv1 = BasicConv2d(256, 256, kernel_size=1, padding=0)
+#         self.conv1_0 = BasicConv2d(256, 256, kernel_size=1, padding=0)
+#         self.conv1_1 = BasicConv2d(256, 256, kernel_size=1, padding=0)
+#         self.conv1_2 = BasicConv2d(256, 256, kernel_size=1, padding=0)
+#         self.conv1_3 = BasicConv2d(256, 256, kernel_size=1, padding=0)
+#         self.feature_extractor = FeatureExtractionBlock()
+#         self.semantic_output = nn.Conv2d(256, nclasses, 1)
+#         #self.model = deeplabv3_resnet50(weights = None, num_classes = nclasses, aux_loss = True, weights_backbone = "ResNet50_Weights.IMAGENET1K_V2")
+#         self.model = fasterrcnn_resnet50_fpn_v2(weights_backbone = "ResNet50_Weights.IMAGENET1K_V2").backbone
+#         print(self.model)
+
+#     def forward(self, x, rgb):
+#         x_feature = self.feature_extractor(x)
+#         x = self.conv3_1(x)
+#         out = self.model(x)
+
+#         out_4 = F.sigmoid(self.semantic_output(x_feature), dim=1)
+
+#         out_3 = self.conv1_3(out["3"])
+#         out_2 = self.conv1_2(out["2"])  + F.interpolate(out_3, size=out["2"].size()[2:], mode='bilinear', align_corners=True)
+#         out_1 = self.conv1_1(out["1"])  + F.interpolate(out_2, size=out["1"].size()[2:], mode='bilinear', align_corners=True)
+#         out_0 = self.conv1_0(out["0"])  + F.interpolate(out_1, size=out["0"].size()[2:], mode='bilinear', align_corners=True)
+#         out = self.conv1(x_feature) + F.interpolate(out_0, size=x_feature.size()[2:], mode='bilinear', align_corners=True)
+
+
+#         if self.aux:
+#             out_0 = self.semantic_output(out_0)
+#             out_0 = F.interpolate(out_0, size=x.size()[2:], mode='bilinear', align_corners=True)
+#             out_0 = F.softmax(out_0,dim=1)
+
+#             out_1 = self.semantic_output(out_1)
+#             out_1 = F.interpolate(out_1, size=x.size()[2:], mode='bilinear', align_corners=True)
+#             out_1 = F.softmax(out_1,dim=1)
+
+#             out_2 = self.semantic_output(out_2)
+#             out_2 = F.interpolate(out_2, size=x.size()[2:], mode='bilinear', align_corners=True)
+#             out_2 = F.softmax(out_2,dim=1)
+
+#             out = self.semantic_output(out)
+#             out = F.softmax(out,dim=1)
+
+#             return [out, out_0, out_1, out_2]
+
+#         else:
+#             out = self.semantic_output(out)
+#             return F.softmax(out["out"],dim=1)
+
+
+       
+
+class FeatureExtractionBlock(nn.Module):
+    def __init__(self) -> None:
+        super().__init__()
+        self.conv1 = nn.Conv2d(5, 128, kernel_size=1, stride=1, padding=0, bias=False)
+        self.conv2 = nn.Conv2d(5, 128, kernel_size=3, stride=1, padding=1, bias=False)
+        self.conv3 = nn.Conv2d(5, 128, kernel_size=5, stride=1, padding=2, bias=False)
+
+        self.final_conv = nn.Conv2d(128, 256, kernel_size=3, stride=1, padding=1, bias=False)
+        self.bn1 = nn.BatchNorm2d(128)
+        self.bn2 = nn.BatchNorm2d(128)
+        self.bn3 = nn.BatchNorm2d(128)
+        self.bn_final = nn.BatchNorm2d(256)
+
+        self.activation = nn.ReLU(inplace=True)
+    
+    def forward(self, x):
+        x1, x2, x3 = self.conv1(x), self.conv2(x), self.conv3(x)
+        x1, x2, x3 = self.bn1(x1), self.bn2(x2), self.bn3(x3)
+        x1, x2, x3 = self.activation(x1), self.activation(x2), self.activation(x3)
+        x = x1+x2+x3
+        x = self.final_conv(x)
+        x = self.bn_final(x)
+        x_feature = self.activation(x)
+   
+
+        return x_feature
 
 
 if __name__ == "__main__":
     import time
-    model = ResNet_34(20).cuda()
+    model = Fusion(20).cuda()
     pytorch_total_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
     print("Number of parameters: ", pytorch_total_params / 1000000, "M")
     time_train = []
     for i in range(20):
-        inputs = torch.randn(1, 5, 64, 2048).cuda()
+        input_3D = torch.randn(2, 5, 64, 512).cuda()
+        input_rgb = torch.randn(2, 3, 452, 1032).cuda()
         model.eval()
         with torch.no_grad():
           start_time = time.time()
-          outputs = model(inputs)
+          outputs = model(input_3D, input_rgb)
         torch.cuda.synchronize()  # wait for cuda to finish (cuda is asynchronous!)
         fwt = time.time() - start_time
         time_train.append(fwt)
         print ("Forward time per img: %.3f (Mean: %.3f)" % (
           fwt / 1, sum(time_train) / len(time_train) / 1))
         time.sleep(0.15)
+
+    # for i in range(20):
+    #     inputs = torch.randn(1, 5, 64, 2048).cuda()
+    #     model.eval()
+    #     with torch.no_grad():
+    #       start_time = time.time()
+    #       outputs = model(inputs)
+    #     torch.cuda.synchronize()  # wait for cuda to finish (cuda is asynchronous!)
+    #     fwt = time.time() - start_time
+    #     time_train.append(fwt)
+    #     print ("Forward time per img: %.3f (Mean: %.3f)" % (
+    #       fwt / 1, sum(time_train) / len(time_train) / 1))
+    #     time.sleep(0.15)
 
 
 

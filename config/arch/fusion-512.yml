@@ -2,7 +2,7 @@
 # training parameters
 ################################################################################
 train:
-  pipeline: "res"       #  "res" "fid" "hard"
+  pipeline: "fusion"       #  "res" "fid" "hard"
   act: "Hardswish"      #  "SiLU" "Hardswish" "LeakyReLU"
   loss: "xentropy"      #   must be either xentropy or iou
   aux_loss: True
@@ -22,9 +22,9 @@ train:
     lr_decay: 0.99       # learning rate decay per epoch after initial cycle (from min lr)
   momentum: 0.9          # sgd momentum
   w_decay: 0.0001        # weight decay
-  batch_size: 6          # batch size
-  report_batch: 100      # every x batches, report loss
-  report_epoch: 1        # every x epochs, report validation set
+  batch_size: 12          # batch size
+  report_batch: 10      # every x batches, report loss
+  report_epoch: 50        # every x epochs, report validation set
   epsilon_w: 0.001       # class weight w = 1 / (content + epsilon_w)
   save_summary: False    # Summary of weight histograms for tensorboard   Must false since not check the api
   save_scans:  False     # False doesn't save anything, True saves som

@@ -1,0 +1,5 @@
+*.png
+logs/*
+__pycache__/
+*.py[cod]
+*.pdf

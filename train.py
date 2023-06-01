@@ -30,15 +30,15 @@ if __name__ == '__main__':
     parser.add_argument(
         '--dataset', '-d',
         type=str,
-        required=True,
-        default=None,
+        required=False,
+        default='../SemanticKITTI/dataset',
         help='Dataset to train with. No Default',
     )
     parser.add_argument(
         '--arch_cfg', '-ac',
         type=str,
         required=False,
-        default='config/arch/senet-512.yml',
+        default='config/arch/fusion-512.yml',
         help='Architecture yaml cfg file. See /config/arch for sample. No default!',
     )
     parser.add_argument(
@@ -57,7 +57,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '--name', '-n',
         type=str,
-        default=None,
+        default='test',
         help='If you want to give an aditional discriptive name'
     )
     parser.add_argument(

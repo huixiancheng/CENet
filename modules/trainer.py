@@ -31,6 +31,13 @@ def save_checkpoint(to_save, logdir, suffix=""):
     # Save the weights
     torch.save(to_save, logdir +
                "/SENet" + suffix)
+    
+def convert_relu_to_softplus(model, act):
+    for child_name, child in model.named_children():
+        if isinstance(child, nn.LeakyReLU):
+            setattr(model, child_name, act)
+        else:
+            convert_relu_to_softplus(child, act)
 
 
 class Trainer():
@@ -101,13 +108,14 @@ class Trainer():
             if self.ARCH["train"]["pipeline"] == "res":
                 from modules.network.ResNet import ResNet_34
                 self.model = ResNet_34(self.parser.get_n_classes(), self.ARCH["train"]["aux_loss"])
-
-                def convert_relu_to_softplus(model, act):
-                    for child_name, child in model.named_children():
-                        if isinstance(child, nn.LeakyReLU):
-                            setattr(model, child_name, act)
-                        else:
-                            convert_relu_to_softplus(child, act)
+                if self.ARCH["train"]["act"] == "Hardswish":
+                    convert_relu_to_softplus(self.model, nn.Hardswish())
+                elif self.ARCH["train"]["act"] == "SiLU":
+                    convert_relu_to_softplus(self.model, nn.SiLU())
+            
+            if self.ARCH["train"]["pipeline"] == "fusion":
+                from modules.network.ResNet import Fusion
+                self.model = Fusion(self.parser.get_n_classes(), self.ARCH["train"]["aux_loss"])
                 if self.ARCH["train"]["act"] == "Hardswish":
                     convert_relu_to_softplus(self.model, nn.Hardswish())
                 elif self.ARCH["train"]["act"] == "SiLU":
@@ -372,8 +380,8 @@ class Trainer():
         losses = AverageMeter()
         acc = AverageMeter()
         iou = AverageMeter()
-        update_ratio_meter = AverageMeter()
         bd = AverageMeter()
+        learning_rate = AverageMeter()
 
         # empty the cache to train now
         if self.gpu:
@@ -385,60 +393,45 @@ class Trainer():
         model.train()
 
         end = time.time()
-        for i, (in_vol, proj_mask, proj_labels, _, path_seq, path_name, _, _, _, _, _, _, _, _, _) in tqdm(enumerate(train_loader), total=len(train_loader)):
+        for i, (proj_data, rgb_data) in tqdm(enumerate(train_loader), total=len(train_loader)):
+            in_vol, proj_mask, proj_labels, _, path_seq, path_name, _, _, _, _, _, _, _, _, _ = proj_data
             # measure data loading time
             self.data_time_t.update(time.time() - end)
             if not self.multi_gpu and self.gpu:
                 in_vol = in_vol.cuda()
             if self.gpu:
                 proj_labels = proj_labels.cuda().long()
-
-#                 proj_labels = proj_labels.unsqueeze(1).type(torch.FloatTensor)
-#                 from torch.nn import functional as F
-#                 [n, c, h, w] = proj_labels.size()
-#                 proj_labels_8 = F.interpolate(proj_labels, size=(h//8, w//8), mode='nearest').squeeze(1).cuda().long()
-#                 proj_labels_4 = F.interpolate(proj_labels, size=(h//4, w//4), mode='nearest').squeeze(1).cuda().long()
-#                 proj_labels_2 = F.interpolate(proj_labels, size=(h//2, w//2), mode='nearest').squeeze(1).cuda().long()
-#                 proj_labels = proj_labels.squeeze(1).cuda().long()
-
-
+            rgb_data = rgb_data.cuda()
             # compute output
             with torch.cuda.amp.autocast():
-
-#                 if self.ARCH["train"]["aux_loss"]:
-#                     [output, z2, z4, z8] = model(in_vol)
-#                     lamda = self.ARCH["train"]["lamda"]
-#                     bdlosss = self.bd(output, proj_labels.long()) + lamda*self.bd(z2, proj_labels_2.long()) + lamda*self.bd(z4, proj_labels_4.long()) + lamda*self.bd(z8, proj_labels_8.long())
-#                     loss_m0 = criterion(torch.log(output.clamp(min=1e-8)), proj_labels) + 1.5 * self.ls(output, proj_labels.long())
-#                     loss_m2 = criterion(torch.log(z2.clamp(min=1e-8)), proj_labels_2) + 1.5 * self.ls(z2, proj_labels_2.long())
-#                     loss_m4 = criterion(torch.log(z4.clamp(min=1e-8)), proj_labels_4) + 1.5 * self.ls(z4, proj_labels_4.long())
-#                     loss_m8 = criterion(torch.log(z8.clamp(min=1e-8)), proj_labels_8) + 1.5 * self.ls(z8, proj_labels_8.long())
-#                     loss_m = loss_m0 + lamda*loss_m2 + lamda*loss_m4 + lamda*loss_m8 + bdlosss
-
                 if self.ARCH["train"]["aux_loss"]:
-                    [output, z2, z4, z8] = model(in_vol)
+                    if 'fusion' in self.ARCH["train"]["pipeline"]:
+                        out = model(in_vol,rgb_data) #[output, z2, z4, z8]
+                    else:
+                        out = model(in_vol)
                     lamda = self.ARCH["train"]["lamda"]
-                    bdlosss = self.bd(output, proj_labels.long()) + lamda*self.bd(z2, proj_labels.long()) + lamda*self.bd(z4, proj_labels.long()) + lamda*self.bd(z8, proj_labels.long())
-                    loss_m0 = criterion(torch.log(output.clamp(min=1e-8)), proj_labels) + 1.5 * self.ls(output, proj_labels.long())
-                    loss_m2 = criterion(torch.log(z2.clamp(min=1e-8)), proj_labels) + 1.5 * self.ls(z2, proj_labels.long())
-                    loss_m4 = criterion(torch.log(z4.clamp(min=1e-8)), proj_labels) + 1.5 * self.ls(z4, proj_labels.long())
-                    loss_m8 = criterion(torch.log(z8.clamp(min=1e-8)), proj_labels) + 1.5 * self.ls(z8, proj_labels.long())
-                    loss_m = loss_m0 + lamda*loss_m2 + lamda*loss_m4 + lamda*loss_m8 + bdlosss
+
+                    ## SUM POSITION LOSSES
+                    for j in range(len(out)):
+                        if j == 0:
+                            bdlosss = self.bd(out[j], proj_labels.long())
+                            loss_mn = criterion(torch.log(out[j].clamp(min=1e-8)), proj_labels) + 1.5 * self.ls(out[j], proj_labels.long())
+                        else:
+                            bdlosss += lamda*self.bd(out[j], proj_labels.long())
+                            loss_mn += lamda*criterion(torch.log(out[j].clamp(min=1e-8)), proj_labels) + 1.5 * self.ls(out[j], proj_labels.long())
+
+                    loss_m = loss_mn + bdlosss
+                    output = out[0]
                 else:
-                    output = model(in_vol)
+                    if 'fusion' in self.ARCH["train"]["pipeline"]:
+                        output = model(in_vol,rgb_data)
+                    else:
+                        output = model(in_vol)
                     bdlosss = self.bd(output, proj_labels.long())
                     loss_m = criterion(torch.log(output.clamp(min=1e-8)), proj_labels) + 1.5 * self.ls(output, proj_labels.long()) + bdlosss
 
             optimizer.zero_grad()
-
-#             if self.n_gpus > 1:
-#                 idx = torch.ones(self.n_gpus).cuda()
-#                 loss_m.backward(idx)
-#             else:
-#                 loss_m.backward()
-#             optimizer.step()
-
-            scaler.scale(loss_m).backward()
+            scaler.scale(loss_m.sum()).backward()
             scaler.step(optimizer)
             scaler.update()
 
@@ -460,11 +453,10 @@ class Trainer():
             self.batch_time_t.update(time.time() - end)
             end = time.time()
 
-            # get gradient updates and weights, so I can print the relationship of
-            # their norms
-            update_ratios = []
             for g in self.optimizer.param_groups:
                 lr = g["lr"]
+            learning_rate.update(lr, 1)
+
 
             if show_scans:
                 if i % self.ARCH["train"]["save_batch"] == 0:
@@ -529,19 +521,23 @@ class Trainer():
 
         with torch.no_grad():
             end = time.time()
-            for i, (in_vol, proj_mask, proj_labels, _, path_seq, path_name, _, _, _, _, _, _, _, _, _) in tqdm(enumerate(val_loader), total=len(val_loader)):
+            for i, (proj_data, rgb_data) in tqdm(enumerate(val_loader), total=len(val_loader)):
+                in_vol, proj_mask, proj_labels, _, path_seq, path_name, _, _, _, _, _, _, _, _, _ = proj_data
                 if not self.multi_gpu and self.gpu:
                     in_vol = in_vol.cuda()
                     proj_mask = proj_mask.cuda()
                 if self.gpu:
                     proj_labels = proj_labels.cuda(non_blocking=True).long()
-
+                rgb_data = rgb_data.cuda()
                 # compute output
-                if self.ARCH["train"]["aux_loss"]:
-                    [output, z2, z4, z8] = model(in_vol)
+                if 'fusion' in self.ARCH["train"]["pipeline"]:
+                    output = model(in_vol,rgb_data)
                 else:
                     output = model(in_vol)
 
+                if self.ARCH["train"]["aux_loss"]:
+                    output = output[0]
+            
                 log_out = torch.log(output.clamp(min=1e-8))
                 jacc = self.ls(output, proj_labels)
                 wce = criterion(log_out, proj_labels)
@@ -555,8 +551,6 @@ class Trainer():
 
 
                 wces.update(wce.mean().item(),in_vol.size(0))
-
-
 
                 if save_scans:
                     # get the first scan in batch and project points
