@@ -14,7 +14,6 @@ split = 'test'
 ARCH = yaml.safe_load(open(model_path + "/arch_cfg.yaml", 'r'))
 DATA = yaml.safe_load(open(model_path + "/data_cfg.yaml", 'r'))
 
-
 if os.path.isdir(result_path):
     shutil.rmtree(result_path)
 os.makedirs(result_path)
