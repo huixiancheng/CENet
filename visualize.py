@@ -76,35 +76,17 @@ if __name__ == '__main__':
     print("offset", FLAGS.offset)
     print("*" * 80)
 
-    if FLAGS.what == "kitti":
-        from common.laserscan import LaserScan, SemLaserScan
-        from common.laserscanvis import LaserScanVis
-    elif FLAGS.what == "poss":
-        from common.posslaserscan import LaserScan, SemLaserScan
-        from common.posslaserscanvis import LaserScanVis
-    else:
-        raise TypeError("This type dataset doesn't exist (use kitti or poss)! Exiting...")
-    # open config file
-    try:
-        if FLAGS.what == "kitti":
-            print("Opening config file of KITTI")
-            CFG = yaml.safe_load(open('config/labels/semantic-kitti.yaml', 'r'))
-        elif FLAGS.what == "poss":
-            print("Opening config file of POSS")
-            CFG = yaml.safe_load(open('config/labels/semantic-poss.yaml', 'r'))
-        else:
-            raise TypeError("This type dataset doesn't exist (use kitti or poss)! Exiting...")
-
-    except Exception as e:
-        raise TypeError("Error opening yaml file.")
-
+    from common.laserscan import LaserScan, SemLaserScan
+    from common.laserscanvis import LaserScanVis
+    
+    print("Opening config file of KITTI")
+    CFG = yaml.safe_load(open('config/labels/semantic-kitti.yaml', 'r'))
 
     # fix sequence name
     FLAGS.sequence = '{0:02d}'.format(int(FLAGS.sequence))
 
     # does sequence folder exist?
-    scan_paths = os.path.join(FLAGS.dataset, "sequences",
-                              FLAGS.sequence, "velodyne")
+    scan_paths = os.path.join(FLAGS.dataset, "sequences", FLAGS.sequence, "velodyne")
 
     if os.path.isdir(scan_paths):
         print("Sequence folder exists! Using sequence from %s" % scan_paths)
@@ -115,13 +97,6 @@ if __name__ == '__main__':
     scan_names = [os.path.join(dp, f) for dp, dn, fn in os.walk(
         os.path.expanduser(scan_paths)) for f in fn]
     scan_names.sort()
-
-    if FLAGS.what == "poss":
-        tag_paths = os.path.join(FLAGS.dataset, "sequences",
-                                 FLAGS.sequence, "tag")
-        tag_names = [os.path.join(dp, f) for dp, dn, fn in os.walk(
-            os.path.expanduser(tag_paths)) for f in fn]
-        tag_names.sort()
 
     # does sequence folder exist?
     if not FLAGS.ignore_semantics:
@@ -156,16 +131,8 @@ if __name__ == '__main__':
     semantics = not FLAGS.ignore_semantics
     if not semantics:
         label_names = None
-    if FLAGS.what == "poss":
-        vis = LaserScanVis(scan=scan,
-                           scan_names=scan_names,
-                           tag_names=tag_names,
-                           label_names=label_names,
-                           offset=FLAGS.offset,
-                           semantics=semantics)
 
-    else:
-        vis = LaserScanVis(scan=scan,
+    vis = LaserScanVis(scan=scan,
                        scan_names=scan_names,
                        label_names=label_names,
                        offset=FLAGS.offset,
