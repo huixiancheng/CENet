@@ -81,8 +81,7 @@ class LaserScanVis:
       self.multiplier += 1
 
     # new canvas for img
-    self.img_canvas = SceneCanvas(keys='interactive', show=True,
-                                  size=(self.canvas_W, self.canvas_H * self.multiplier))
+    self.img_canvas = SceneCanvas(keys='interactive', show=True, size=(self.canvas_W, self.canvas_H * self.multiplier))
     # grid
     self.img_grid = self.img_canvas.central_widget.add_grid()
     # interface (n next, b back, q quit, very simple)
@@ -90,34 +89,29 @@ class LaserScanVis:
     self.img_canvas.events.draw.connect(self.draw)
 
     # add a view for the depth
-    self.img_view = vispy.scene.widgets.ViewBox(
-        border_color='white', parent=self.img_canvas.scene)
+    self.img_view = vispy.scene.widgets.ViewBox(border_color='white', parent=self.img_canvas.scene)
     self.img_grid.add_widget(self.img_view, 0, 0)
     self.img_vis = visuals.Image(cmap='viridis')
     self.img_view.add(self.img_vis)
 
     # add semantics
     if self.semantics:
-      self.sem_img_view = vispy.scene.widgets.ViewBox(
-          border_color='white', parent=self.img_canvas.scene)
+      self.sem_img_view = vispy.scene.widgets.ViewBox(border_color='white', parent=self.img_canvas.scene)
       self.img_grid.add_widget(self.sem_img_view, 1, 0)
       self.sem_img_vis = visuals.Image(cmap='viridis')
       self.sem_img_view.add(self.sem_img_vis)
 
     # add instances
     if self.instances:
-      self.inst_img_view = vispy.scene.widgets.ViewBox(
-          border_color='white', parent=self.img_canvas.scene)
+      self.inst_img_view = vispy.scene.widgets.ViewBox(border_color='white', parent=self.img_canvas.scene)
       self.img_grid.add_widget(self.inst_img_view, 2, 0)
       self.inst_img_vis = visuals.Image(cmap='viridis')
       self.inst_img_view.add(self.inst_img_vis)
 
   def get_mpl_colormap(self, cmap_name):
     cmap = plt.get_cmap(cmap_name)
-
     # Initialize the matplotlib color map
     sm = plt.cm.ScalarMappable(cmap=cmap)
-
     # Obtain linear color range
     color_range = sm.to_rgba(np.linspace(0, 1, 256), bytes=True)[:, 2::-1]
 
@@ -144,9 +138,7 @@ class LaserScanVis:
     # print(range_data.max(), range_data.min())
     range_data = range_data**(1 / power)
     # print(range_data.max(), range_data.min())
-    viridis_range = ((range_data - range_data.min()) /
-                     (range_data.max() - range_data.min()) *
-                     255).astype(np.uint8)
+    viridis_range = ((range_data - range_data.min()) / (range_data.max() - range_data.min()) * 255).astype(np.uint8)
     viridis_map = self.get_mpl_colormap("viridis")
     viridis_colors = viridis_map[viridis_range]
     self.scan_vis.set_data(self.scan.points,
