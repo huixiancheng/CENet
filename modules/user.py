@@ -23,8 +23,6 @@ class User():
     # get the data
     from dataset.kitti.parser import Parser
     self.parser = Parser(root=self.datadir,
-                         train_sequences=self.DATA["split"]["train"],
-                         valid_sequences=self.DATA["split"]["valid"],
                          test_sequences=self.DATA["split"]["test"],
                          labels=self.DATA["labels"],
                          color_map=self.DATA["color_map"],
@@ -70,7 +68,7 @@ class User():
                 convert_relu_to_softplus(self.model, nn.SiLU())
 
 #     print(self.model)
-    w_dict = torch.load(modeldir + "/SENet_valid_best", map_location=lambda storage, loc: storage)
+    w_dict = torch.load(modeldir + "/SalsaNext_valid_best", map_location=lambda storage, loc: storage)
     self.model.load_state_dict(w_dict['state_dict'], strict=True)
     # use knn post processing?
     self.post = None
@@ -92,26 +90,7 @@ class User():
   def infer(self):
     cnn = []
     knn = []
-    #if self.split == None:
-    #
-    #    self.infer_subset(loader=self.parser.get_train_set(),
-    #                      to_orig_fn=self.parser.to_original, cnn=cnn, knn=knn)
 
-#        # do valid set
-#        self.infer_subset(loader=self.parser.get_valid_set(),
-#                          to_orig_fn=self.parser.to_original, cnn=cnn, knn=knn)
-#        # do test set
-#        self.infer_subset(loader=self.parser.get_test_set(),
-#                          to_orig_fn=self.parser.to_original, cnn=cnn, knn=knn)
-
-
-    #elif self.split == 'valid':
-    #    self.infer_subset(loader=self.parser.get_valid_set(),
-    #                    to_orig_fn=self.parser.to_original, cnn=cnn, knn=knn)
-    #elif self.split == 'train':
-    #    self.infer_subset(loader=self.parser.get_train_set(),
-    #                    to_orig_fn=self.parser.to_original, cnn=cnn, knn=knn)
-    #else:
     self.infer_subset(loader=self.parser.get_test_set(), to_orig_fn=self.parser.to_original, cnn=cnn, knn=knn)
     
     print("Mean CNN inference time:{}\t std:{}".format(np.mean(cnn), np.std(cnn)))

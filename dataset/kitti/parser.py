@@ -292,8 +292,6 @@ class Parser():
   # standard conv, BN, relu
   def __init__(self,
                root,              # directory for data
-               train_sequences,   # sequences to train
-               valid_sequences,   # sequences to validate.
                test_sequences,    # sequences to test (if none, don't get)
                labels,            # labels in data
                color_map,         # color for each label
@@ -309,8 +307,6 @@ class Parser():
 
     # if I am training, get the dataset
     self.root = root
-    self.train_sequences = train_sequences
-    self.valid_sequences = valid_sequences
     self.test_sequences = test_sequences
     self.labels = labels
     self.color_map = color_map
@@ -326,62 +322,12 @@ class Parser():
     # number of classes that matters is the one for xentropy
     self.nclasses = len(self.learning_map_inv)
 
-    # Data loading code
-    self.train_dataset = SemanticKitti(root=self.root,
-                                       sequences=self.train_sequences,
-                                       labels=self.labels,
-                                       color_map=self.color_map,
-                                       learning_map=self.learning_map,
-                                       learning_map_inv=self.learning_map_inv,
-                                       sensor=self.sensor,
-                                       max_points=max_points,
-                                       transform=True,
-                                       gt=self.gt)
-
-#     np.random.seed(0)
-#     dataset_size = len(self.train_dataset)
-#     indices = list(range(dataset_size))
-#     split = int(0.5 * dataset_size)
-#     np.random.shuffle(indices)
-#     train_indices = indices[:split]
-#     train_sampler = torch.utils.data.SubsetRandomSampler(train_indices)
-#     print('Subsample:', len(train_indices))
-
     def seed_worker(worker_id):
         worker_seed = torch.initial_seed() % 2**32
         np.random.seed(worker_seed)
         random.seed(worker_seed)
     g = torch.Generator()
     g.manual_seed(1024)
-#                                                    #sampler=train_sampler,
-
-    self.trainloader = torch.utils.data.DataLoader(self.train_dataset,
-                                                   batch_size=self.batch_size,
-                                                   shuffle=self.shuffle_train,
-                                                   num_workers=self.workers,
-                                                   worker_init_fn=seed_worker,
-                                                   generator=g,
-                                                   drop_last=True)
-    assert len(self.trainloader) > 0
-    self.trainiter = iter(self.trainloader)
-
-    self.valid_dataset = SemanticKitti(root=self.root,
-                                       sequences=self.valid_sequences,
-                                       labels=self.labels,
-                                       color_map=self.color_map,
-                                       learning_map=self.learning_map,
-                                       learning_map_inv=self.learning_map_inv,
-                                       sensor=self.sensor,
-                                       max_points=max_points,
-                                       gt=self.gt)
-
-    self.validloader = torch.utils.data.DataLoader(self.valid_dataset,
-                                                   batch_size=self.batch_size,
-                                                   shuffle=False,
-                                                   num_workers=self.workers,
-                                                   drop_last=True)
-    assert len(self.validloader) > 0
-    self.validiter = iter(self.validloader)
 
     if self.test_sequences:
       self.test_dataset = SemanticKitti(root=self.root,
@@ -402,20 +348,6 @@ class Parser():
 #       assert len(self.testloader) > 0
       self.testiter = iter(self.testloader)
 
-  def get_train_batch(self):
-    scans = self.trainiter.next()
-    return scans
-
-  def get_train_set(self):
-    return self.trainloader
-
-  def get_valid_batch(self):
-    scans = self.validiter.next()
-    return scans
-
-  def get_valid_set(self):
-    return self.validloader
-
   def get_test_batch(self):
     scans = self.testiter.next()
     return scans
@@ -425,12 +357,6 @@ class Parser():
 
   def get_train_size(self):
     return len(self.trainloader)
-
-  def get_valid_size(self):
-    return len(self.validloader)
-
-  def get_test_size(self):
-    return len(self.testloader)
 
   def get_n_classes(self):
     return self.nclasses
