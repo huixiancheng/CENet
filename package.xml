@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<package>
+  <name>ce_net</name>
+  <version>0.0.0</version>
+  <description>
+    ce_net is the ros-based package for CENet.
+  </description>
+  
+  <maintainer email="doal8589@colorado.edu">
+    Doncey Albin
+  </maintainer>
+  <license>MIT</license>
+
+  <author email="doal8589@colorado.edu">Doncey Albin</author>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  
+  <run_depend>sc_lio_sam</run_depend>
+
+  <run_depend>rospy</run_depend>
+  <run_depend>std_msgs</run_depend>
+  <run_depend>tf</run_depend>
+
+  <run_depend>hector_models</run_depend>
+  <run_depend>hardware_interface</run_depend>
+  <run_depend>joint_state_publisher</run_depend>
+  <run_depend>robot_state_publisher</run_depend>
+  <run_depend>rviz</run_depend>
+
+  <export>
+    <architecture_independent/>
+  </export>
+</package>
