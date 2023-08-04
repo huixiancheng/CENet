@@ -258,7 +258,7 @@ class LaserScan:
         fov = abs(fov_down) + abs(fov_up)  # get field of view total in rad
 
         # get depth of all points
-        depth = np.linalg.norm(self.points, 2, axis=1) + 0.5 #2
+        depth = np.linalg.norm(self.points, 2, axis=1) + 0.00000000000000000000000000000001 #2
 
         # get scan components
         scan_x = self.points[:, 0]
@@ -275,7 +275,7 @@ class LaserScan:
         print(f"\nx_mean: {np.mean(self.scan_x_list)}, y_mean: {np.mean(self.scan_y_list)}, z_mean: {np.mean(self.scan_z_list)}, int_mean: {np.mean(self.intensity_list)}, depth_mean: {np.mean(self.depth_list)}")
         print(f"x_std: {np.std(self.scan_x_list)}, y_std: {np.std(self.scan_y_list)}, z_std: {np.std(self.scan_z_list)}, int_std: {np.std(self.intensity_list)}, depth_std: {np.std(self.depth_list)}\n")
         '''
-        
+
         # get angles of all points
         yaw = -np.arctan2(scan_y, scan_x)
 
