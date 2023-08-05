@@ -1,5 +1,5 @@
 python3 infer.py -d /home/donceykong/Desktop/CU3DSS/data/bin/cu_campus -l /home/donceykong/Desktop/CU3DSS/CENet/predictions
  -m /home/donceykong/Desktop/CU3DSS/CENet/dataset/final_result/1024+valid5
 
-python3 visualize.py -w kitti -d /home/donceykong/Desktop/CU3DSS/data/bin/cu_campus -p /home/donceykong/Desktop/CU3DSS/CENet/predictions -s test
+python3 visualize.py -w kitti -d /home/donceykong/hunter_ws/src/hunter_robot/hunter_robot_data/bin/cu_campus -p /home/donceykong/hunter_ws/src/CENet/src/predictions -s 13
 

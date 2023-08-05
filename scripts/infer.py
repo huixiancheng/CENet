@@ -6,7 +6,7 @@ from sensor_msgs import point_cloud2
 import numpy as np
 import ros_numpy
 import struct
-from src.modules.user import User
+from modules.user import User
 
 def callback(data):
     rospy.loginfo('Received a PointCloud2 message')
