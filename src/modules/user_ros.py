@@ -16,6 +16,8 @@ from sensor_msgs import point_cloud2
 import sensor_msgs.point_cloud2 as pcl2
 import numpy as np
 
+import cv2
+
 class User():
     def __init__(self, ARCH, DATA, datadir, logdir, modeldir,split):
         # parameters
@@ -130,7 +132,7 @@ class User():
         rospy.Subscriber(ouster_points, PointCloud2, self.infer)
 
         # Create a publisher for the output PointCloud2 topic
-        self.pub = rospy.Publisher('/semantic_points', PointCloud2, queue_size=10)
+        self.pub = rospy.Publisher('/semantic_points', PointCloud2, queue_size=1)
 
         rospy.spin()
 
@@ -179,9 +181,28 @@ class User():
             p_y = p_y[:npoints]
             proj_range = proj_range[:npoints]
             unproj_range = unproj_range[:npoints]
+
+            # Convert tensors to numpy
+            p_x_np = p_x.numpy()   
+            p_y_np = p_y.numpy()
+            proj_range_np = proj_range.numpy()
+
+            # Convert the intensity values (proj_range) to a grayscale image
+            # You might need to normalize the values to be in the range [0, 255]
+            cv_image = (proj_range_np)#.astype(np.uint16)
+            
+            print(cv_image.shape)
+            cv2.imshow("Model image", cv_image)
+
+            key = cv2.waitKey(1) & 0xFF
+            #cv2.destroyAllWindows()
+            
             # path_seq = path_seq[0]
             # path_name = path_name[0]
-        
+
+            print(f"p_x.shape: {p_x.shape}, p_y.shape: {p_y.shape}, proj_range.shape: {proj_range.shape}")
+            print(f"unproj_range.shape: {unproj_range.shape}, proj_in: {proj_in.shape}")
+
             if self.gpu:
                 proj_in = proj_in.cuda()
                 p_x = p_x.cuda()

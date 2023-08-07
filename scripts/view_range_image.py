@@ -1,43 +1,36 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import rospy
 import numpy as np
-import cv2
 from sensor_msgs.msg import Image
-from cv_bridge import CvBridge, CvBridgeError
-
-bridge = CvBridge()
+import cv2
 
 def range_image_callback(data):
-    try:
-        # Convert the ROS Image message to a numpy array (OpenCV format)
-        cv_image = bridge.imgmsg_to_cv2(data, desired_encoding="mono16")
+    # Ensure the encoding is as expected
+    if data.encoding != "mono16":
+        rospy.logerr(f"Unexpected encoding: {data.encoding}")
+        return
+    
+    # Convert the byte data to a numpy array
+    dtype = np.dtype(np.uint16)  # as it's mono16
+    dtype = dtype.newbyteorder('>')  # ROS Image messages use big endian
+    cv_image = np.frombuffer(data.data, dtype=dtype).reshape(data.height, data.width)
+    
+    # Access a specific pixel (e.g., at row 50, column 100)
+    #pixel_value = cv_image[50, 100]
 
-        # Access a specific pixel (e.g., at row 50, column 100)
-        pixel_value = cv_image[:, :]
-        rospy.loginfo(f"Pixel (50, 100) range value: {pixel_value.shape}")
+#    rospy.loginfo(f"Pixel (50, 100) range value: {pixel_value}")
 
-        # If you want to access all pixel values:
-        # (Be careful with this! It might print too much information)
-        # print(cv_image)
-
-    except CvBridgeError as e:
-        rospy.logerr("CvBridge Error: {0}".format(e))
-
-def range_image_callback2(data):
-    # Here you can access the data in the message
-    # For instance, to print the height and width of the image:
-
-    rospy.loginfo(f"sub data: {data.data}")
-    #rospy.loginfo(f"Range Image Width: {data.width}, Height: {data.height}")
-
-    # If you need to process the image data, you can access it as:
-    # data.data
+    cv2.imshow("Model image", cv_image)
+    
+    key = cv2.waitKey(10) & 0xFF
+#    cv2.waitKey(0)
+    #cv2.destroyAllWindows()
 
 def listener():
     rospy.init_node('range_image_listener', anonymous=True)
     rospy.Subscriber("/ouster/range_image", Image, range_image_callback)
-    
+
     # Keep the node running
     rospy.spin()
 
