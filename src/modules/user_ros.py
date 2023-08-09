@@ -120,7 +120,7 @@ class User():
 
     def listener(self):
         # Subscribe to the input PointCloud2 topic
-        #sc_lio_sam_global_map = '/sc_lio_sam/map_global'
+        sc_lio_sam_global_map = '/sc_lio_sam/map_global'
         #sc_lio_sam_local_map = '/sc_lio_sam/map_local'
         
         self.model.eval()
@@ -132,7 +132,7 @@ class User():
         rospy.Subscriber(ouster_points, PointCloud2, self.infer)
 
         # Create a publisher for the output PointCloud2 topic
-        self.pub = rospy.Publisher('/semantic_points', PointCloud2, queue_size=1)
+        self.pub = rospy.Publisher('/semantic_points', PointCloud2, queue_size=10)
 
         rospy.spin()
 
@@ -147,17 +147,20 @@ class User():
 
         self.infer_subset(loader, to_orig_fn, cnn=cnn, knn=knn)
     
-        #print("Mean CNN inference time:{}\t std:{}".format(np.mean(cnn), np.std(cnn)))
-        #print("Mean KNN inference time:{}\t std:{}".format(np.mean(knn), np.std(knn)))
-        #print("Total Frames:{}".format(len(cnn)))
+        print("Mean CNN inference time:{}\t std:{}".format(np.mean(cnn), np.std(cnn)))
+        print("Mean KNN inference time:{}\t std:{}".format(np.mean(knn), np.std(knn)))
+        print("Total Frames:{}".format(len(cnn)))
         #print("Finished Infering")
 
         return
 
     def publish(self, labels):
         #self.header.stamp = rospy.Time.now() #timestamp
-        semantic_points = self.parser.get_scan().flatten()
+        semantic_points = self.parser.get_scan()
+        #semantic_points = semantic_points.reshape(64, 1024)
+        print(semantic_points)
         semantic_points['intensity'] = labels
+
         labeled_cloud = pcl2.create_cloud(self.header, self.fields, semantic_points)
         labeled_cloud.is_dense = True  # Added line
         self.pub.publish(labeled_cloud)
@@ -173,15 +176,23 @@ class User():
         #    torch.cuda.empty_cache()
         
         with torch.no_grad():
-            #for i, (proj_in, proj_mask, _, _, path_seq, path_name, p_x, p_y, proj_range, unproj_range, _, _, _, _, npoints) in enumerate(loader):
             proj_in, proj_mask, _, _, p_x, p_y, proj_range, unproj_range, _, _, _, _, npoints = loader
             # first cut to rela size (batch size one allows it)
 
             p_x = p_x[:npoints]
             p_y = p_y[:npoints]
             proj_range = proj_range[:npoints]
-            unproj_range = unproj_range[:npoints]
+            unproj_range = unproj_range[:npoints]  # normalized range data ... 
+            print(unproj_range)
 
+            proj_range_np = proj_range.numpy()
+            cv_image = (proj_range_np)#.astype(np.uint16)
+            print(cv_image.shape)
+            cv2.imshow("Model image", cv_image)
+            key = cv2.waitKey(1000) & 0xFF
+            cv2.destroyAllWindows()
+
+            '''
             # Convert tensors to numpy
             p_x_np = p_x.numpy()   
             p_y_np = p_y.numpy()
@@ -195,13 +206,14 @@ class User():
             cv2.imshow("Model image", cv_image)
 
             key = cv2.waitKey(1) & 0xFF
-            #cv2.destroyAllWindows()
+            cv2.destroyAllWindows()
             
             # path_seq = path_seq[0]
             # path_name = path_name[0]
 
             print(f"p_x.shape: {p_x.shape}, p_y.shape: {p_y.shape}, proj_range.shape: {proj_range.shape}")
             print(f"unproj_range.shape: {unproj_range.shape}, proj_in: {proj_in.shape}")
+            '''
 
             if self.gpu:
                 proj_in = proj_in.cuda()

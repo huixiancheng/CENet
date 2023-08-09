@@ -114,15 +114,6 @@ class LaserScan:
         rospy.loginfo('Converting a PointCloud2 message')
         pc = ros_numpy.numpify(data)
         
-        #data_points=np.zeros((pc.shape[0], pc.shape[1], 6))
-        data_points=np.zeros((pc.shape[0], pc.shape[1], 4))
-        data_points[:,:,0]=pc['x'].astype(np.float32)
-        data_points[:,:,1]=pc['y'].astype(np.float32)
-        data_points[:,:,2]=pc['z'].astype(np.float32)
-        data_points[:,:,3]=pc['intensity'].astype(np.float32)
-        #data_points[:,:,4]=pc['t'].astype(np.uint32)
-        #data_points[:,:,5]=pc['ring'].astype(np.uint8)
-        
         data_points2 = np.zeros(pc.shape, dtype=[('x', np.float32), ('y', np.float32), ('z', np.float32), ('intensity', np.float32), ('t', np.uint32), ('ring', np.uint8)])
         data_points2['x'] = pc['x'].astype(np.float32)
         data_points2['y'] = pc['y'].astype(np.float32)
@@ -130,15 +121,12 @@ class LaserScan:
         data_points2['intensity'] = pc['intensity'].astype(np.float32)
         data_points2['t'] = pc['t'].astype(np.uint32)
         data_points2['ring'] = pc['ring'].astype(np.uint8)
+        
+        self.scan = data_points2.flatten()
 
-        self.scan = data_points2
-
-        points_orig = np.array(data_points[:,:,0:4], dtype=np.float32)
-        points_rs = points_orig.reshape((-1, 4))
-
-        points = points_rs[:, 0:3]      # get xyz
-        remissions = points_rs[:, 3]    # get remission
-
+        points = np.array([data_points2['x'].flatten(), data_points2['y'].flatten(), data_points2['z'].flatten()]).T        # get xyz
+        remissions = data_points2['intensity'].flatten()    # get remission
+    
         if self.drop_points is not False:
             self.points_to_drop = np.random.randint(0, len(points)-1,int(len(points)*self.drop_points))
             points = np.delete(points,self.points_to_drop,axis=0)

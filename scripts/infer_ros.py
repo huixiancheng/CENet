@@ -13,9 +13,9 @@ from modules.user_ros import User
 if __name__ == '__main__':
     splits = ["train", "valid", "test"]
 
-    model_dir = '/home/donceykong/hunter_ws/src/CENet/src/dataset/final_result/1024+valid5'
-    log_dir = '/home/donceykong/hunter_ws/src/CENet/src/predictions'
-    dataset_dir = '/home/donceykong/hunter_ws/src/hunter_robot/hunter_robot_data/bin/cu_campus'
+    model_dir = '/home/arpg/hunter_ws/src/CENet/src/dataset/final_result/1024+valid5'
+    log_dir = '/home/arpg/hunter_ws/src/CENet/src/predictions'
+    dataset_dir = '/home/arpg/hunter_ws/src/hunter_robot/hunter_robot_data/bin/cu_campus'
     split = '13'
 
     # print summary of what we will do
