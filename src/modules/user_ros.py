@@ -282,4 +282,7 @@ class User():
             pred_np = to_orig_fn(pred_np)
             #print(f"predictions numpy:\n {pred_np}")
 
-            self.publish(pred_np)
+            label_filename = f"{self.aligned_header_stamp.secs}_{self.aligned_header_stamp.nsecs}.label"
+            pred_np.tofile(f"/home/arpg/hunter_ws/src/ce_net_ros/src/predictions/07_17_2023/{label_filename}")
+            
+            #self.publish(pred_np)
