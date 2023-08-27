@@ -132,7 +132,7 @@ class User():
         rospy.Subscriber(ouster_points, PointCloud2, self.infer)
 
         # Create a publisher for the output PointCloud2 topic
-        self.pub = rospy.Publisher('/semantic_points', PointCloud2, queue_size=10)
+        #self.pub = rospy.Publisher('/semantic_points', PointCloud2, queue_size=10)
 
         rospy.spin()
 
