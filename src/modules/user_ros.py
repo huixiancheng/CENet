@@ -16,6 +16,9 @@ from sensor_msgs import point_cloud2
 import sensor_msgs.point_cloud2 as pcl2
 import numpy as np
 
+import message_filters
+from geometry_msgs.msg import PoseStamped
+
 import cv2
 
 class User():
@@ -128,21 +131,27 @@ class User():
         if self.gpu:
             torch.cuda.empty_cache()
         
-        ouster_points = '/ouster/points'
-        rospy.Subscriber(ouster_points, PointCloud2, self.infer)
+        #ouster_points = '/ouster/points'
+        #rospy.Subscriber(ouster_points, PointCloud2, self.infer)
+
+        pointcloud2_sub = message_filters.Subscriber('/ouster/points', PointCloud2)
+        posestamped_sub = message_filters.Subscriber('/sc_lio_sam/pose_estimate', PoseStamped)
+
+        ts = message_filters.ApproximateTimeSynchronizer([pointcloud2_sub, posestamped_sub], queue_size=10, slop=0.01)
+        ts.registerCallback(self.infer)
 
         # Create a publisher for the output PointCloud2 topic
         #self.pub = rospy.Publisher('/semantic_points', PointCloud2, queue_size=10)
 
         rospy.spin()
 
-    def infer(self, data):
+    def infer(self, pointcloud_data, posestamped_data):
         #rospy.loginfo('Received a PointCloud2 message')
-        self.header.stamp = data.header.stamp
+        self.header.stamp = posestamped_data.header.stamp
         
         cnn = []
         knn = []
-        loader=self.parser.get_test_set(data)
+        loader=self.parser.get_test_set(pointcloud_data)
         to_orig_fn=self.parser.to_original
 
         self.infer_subset(loader, to_orig_fn, cnn=cnn, knn=knn)
@@ -185,12 +194,12 @@ class User():
             unproj_range = unproj_range[:npoints]  # normalized range data ... 
             print(unproj_range)
 
-            proj_range_np = proj_range.numpy()
-            cv_image = (proj_range_np)#.astype(np.uint16)
-            print(cv_image.shape)
-            cv2.imshow("Model image", cv_image)
-            key = cv2.waitKey(1000) & 0xFF
-            cv2.destroyAllWindows()
+            #proj_range_np = proj_range.numpy()
+            #cv_image = (proj_range_np)#.astype(np.uint16)
+            #print(cv_image.shape)
+            #cv2.imshow("Model image", cv_image)
+            #key = cv2.waitKey(1000) & 0xFF
+            #cv2.destroyAllWindows()
 
             '''
             # Convert tensors to numpy
@@ -282,7 +291,7 @@ class User():
             pred_np = to_orig_fn(pred_np)
             #print(f"predictions numpy:\n {pred_np}")
 
-            label_filename = f"{self.aligned_header_stamp.secs}_{self.aligned_header_stamp.nsecs}.label"
-            pred_np.tofile(f"/home/arpg/hunter_ws/src/ce_net_ros/src/predictions/07_17_2023/{label_filename}")
+            label_filename = f"{self.header.stamp.secs}_{self.header.stamp.nsecs}.label"
+            pred_np.tofile(f"/home/arpg/hunter_ws/src/semantic_map_grapher/bin_data/{label_filename}")
             
             #self.publish(pred_np)

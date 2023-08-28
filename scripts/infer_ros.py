@@ -13,8 +13,8 @@ from modules.user_ros import User
 if __name__ == '__main__':
     splits = ["train", "valid", "test"]
 
-    model_dir = '/home/arpg/hunter_ws/src/CENet/src/dataset/final_result/1024+valid5'
-    log_dir = '/home/arpg/hunter_ws/src/CENet/src/predictions'
+    model_dir = '/home/arpg/hunter_ws/src/ce_net_ros/src/dataset/final_result/1024+valid5'
+    log_dir = '/home/arpg/hunter_ws/src/ce_net_ros/src/predictions'
     dataset_dir = '/home/arpg/hunter_ws/src/hunter_robot/hunter_robot_data/bin/cu_campus'
     split = '13'
 
@@ -46,6 +46,7 @@ if __name__ == '__main__':
         quit()
 
     # create log folder
+    '''
     try:
         if os.path.isdir(log_dir):
             shutil.rmtree(log_dir)
@@ -60,7 +61,7 @@ if __name__ == '__main__':
         print(e)
         print("Error creating log directory. Check permissions!")
         raise
-
+    '''
     # does model folder exist?
     if os.path.isdir(model_dir):
         print("model folder exists! Using model from %s" % (model_dir))
