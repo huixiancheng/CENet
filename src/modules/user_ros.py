@@ -18,6 +18,7 @@ import numpy as np
 
 import message_filters
 from geometry_msgs.msg import PoseStamped
+from nav_msgs.msg import Odometry
 
 import cv2
 
@@ -122,22 +123,17 @@ class User():
             self.model.cuda()
 
     def listener(self):
-        # Subscribe to the input PointCloud2 topic
-        sc_lio_sam_global_map = '/sc_lio_sam/map_global'
-        #sc_lio_sam_local_map = '/sc_lio_sam/map_local'
-        
         self.model.eval()
         # empty the cache to infer in high res
         if self.gpu:
             torch.cuda.empty_cache()
-        
-        #ouster_points = '/ouster/points'
-        #rospy.Subscriber(ouster_points, PointCloud2, self.infer)
 
         pointcloud2_sub = message_filters.Subscriber('/ouster/points', PointCloud2)
-        posestamped_sub = message_filters.Subscriber('/sc_lio_sam/pose_estimate', PoseStamped)
+        #posestamped_sub = message_filters.Subscriber('/sc_lio_sam/pose_estimate', PoseStamped)
+        odom_sub = message_filters.Subscriber('/sc_lio_sam/mapping/odometry', Odometry)
 
-        ts = message_filters.ApproximateTimeSynchronizer([pointcloud2_sub, posestamped_sub], queue_size=10, slop=0.01)
+        #ts = message_filters.ApproximateTimeSynchronizer([pointcloud2_sub, posestamped_sub], queue_size=10, slop=0.01)
+        ts = message_filters.ApproximateTimeSynchronizer([pointcloud2_sub, odom_sub], queue_size=10, slop=0.01)
         ts.registerCallback(self.infer)
 
         # Create a publisher for the output PointCloud2 topic
@@ -145,9 +141,9 @@ class User():
 
         rospy.spin()
 
-    def infer(self, pointcloud_data, posestamped_data):
+    def infer(self, pointcloud_data, state_est_data):
         #rospy.loginfo('Received a PointCloud2 message')
-        self.header.stamp = posestamped_data.header.stamp
+        self.header.stamp = state_est_data.header.stamp
         
         cnn = []
         knn = []
