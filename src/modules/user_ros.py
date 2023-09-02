@@ -288,6 +288,6 @@ class User():
             #print(f"predictions numpy:\n {pred_np}")
 
             label_filename = f"{self.header.stamp.secs}_{self.header.stamp.nsecs}.label"
-            pred_np.tofile(f"/home/arpg/hunter_ws/src/semantic_map_grapher/bin_data/{label_filename}")
+            pred_np.tofile(f"/home/arpg/hunter_ws/src/cu_osm/bin_data/{label_filename}")
             
             #self.publish(pred_np)
