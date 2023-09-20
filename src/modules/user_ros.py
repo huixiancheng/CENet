@@ -108,7 +108,7 @@ class User():
         
         if self.ARCH["post"]["KNN"]["use"]:
             self.post = KNN(self.ARCH["post"]["KNN"]["params"], self.parser.get_n_classes())
-        print(self.parser.get_n_classes())
+        #print(self.parser.get_n_classes())
 
         # GPU?
         self.gpu = False
@@ -152,9 +152,9 @@ class User():
 
         self.infer_subset(loader, to_orig_fn, cnn=cnn, knn=knn)
     
-        print("Mean CNN inference time:{}\t std:{}".format(np.mean(cnn), np.std(cnn)))
-        print("Mean KNN inference time:{}\t std:{}".format(np.mean(knn), np.std(knn)))
-        print("Total Frames:{}".format(len(cnn)))
+        #print("Mean CNN inference time:{}\t std:{}".format(np.mean(cnn), np.std(cnn)))
+        #print("Mean KNN inference time:{}\t std:{}".format(np.mean(knn), np.std(knn)))
+        #print("Total Frames:{}".format(len(cnn)))
         #print("Finished Infering")
 
         return
@@ -163,7 +163,7 @@ class User():
         #self.header.stamp = rospy.Time.now() #timestamp
         semantic_points = self.parser.get_scan()
         #semantic_points = semantic_points.reshape(64, 1024)
-        print(semantic_points)
+        #print(semantic_points)
         semantic_points['intensity'] = labels
 
         labeled_cloud = pcl2.create_cloud(self.header, self.fields, semantic_points)
@@ -188,7 +188,7 @@ class User():
             p_y = p_y[:npoints]
             proj_range = proj_range[:npoints]
             unproj_range = unproj_range[:npoints]  # normalized range data ... 
-            print(unproj_range)
+            #print(unproj_range)
 
             #proj_range_np = proj_range.numpy()
             #cv_image = (proj_range_np)#.astype(np.uint16)
@@ -235,8 +235,24 @@ class User():
             else:
                 with torch.cuda.amp.autocast(enabled=True):
                     proj_output = self.model(proj_in)
+            
+
+
+            probs = torch.nn.functional.softmax(proj_output[0], dim=0)
+            probs_np = probs.cpu().numpy()
+            # Rearrange dimensions to have the class dimension last
+            rearranged_probs = np.transpose(probs_np, (1, 2, 0))
+            # Reshape to combine the spatial dimensions
+            points_probs = rearranged_probs.reshape(-1, 20)
+            proj_argmax2 = points_probs.argmax(axis=1)
+            # Convert proj_argmax2 into a 2D array of shape (64, 1024) or whatever the resolution of your projection is
+            reshaped_proj_argmax2 = proj_argmax2.reshape(64, 1024)  # Change these dimensions if necessary
+            # Then you can index it with p_y and p_x
+            unproj_argmax = reshaped_proj_argmax2[p_y.cpu().numpy(), p_x.cpu().numpy()]
+            pred_np = unproj_argmax.reshape((-1)).astype(np.int32)
 
             proj_argmax = proj_output[0].argmax(dim=0)
+            
             if torch.cuda.is_available():
                 torch.cuda.synchronize()
             res = time.time() - end
@@ -285,7 +301,7 @@ class User():
 
             # map to original label
             pred_np = to_orig_fn(pred_np)
-            #print(f"predictions numpy:\n {pred_np}")
+            print(f"predictions numpy:\n {pred_np}")
 
             label_filename = f"{self.header.stamp.secs}_{self.header.stamp.nsecs}.label"
             pred_np.tofile(f"/home/arpg/hunter_ws/src/cu_osm/bin_data/{label_filename}")

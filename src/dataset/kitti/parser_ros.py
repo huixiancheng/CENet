@@ -157,11 +157,7 @@ class SemanticKitti(Dataset):
     unproj_range[:unproj_n_points] = torch.from_numpy(self.scan.unproj_range)
     unproj_remissions = torch.full([self.max_points], -1.0, dtype=torch.float)
     unproj_remissions[:unproj_n_points] = torch.from_numpy(self.scan.remissions)
-    
-    #if self.gt:
-    #  unproj_labels = torch.full([self.max_points], -1.0, dtype=torch.int32)
-    #  unproj_labels[:unproj_n_points] = torch.from_numpy(scan.sem_label)
-    #else:
+
     unproj_labels = []
 
     # get points and labels
@@ -172,10 +168,7 @@ class SemanticKitti(Dataset):
 #   proj_normal = torch.from_numpy(scan.normal_image).clone()
 
     proj_mask = torch.from_numpy(self.scan.proj_mask)
-    #if self.gt:
-    #  proj_labels = torch.from_numpy(scan.proj_sem_label).clone()
-    #  proj_labels = proj_labels * proj_mask
-    #else:
+
     proj_labels = []
     
     proj_x = torch.full([self.max_points], -1, dtype=torch.long)

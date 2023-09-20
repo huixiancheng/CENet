@@ -291,7 +291,7 @@ class LaserScan:
     def get_img_means(self):
         img_means = torch.tensor([[[ np.mean(self.depth_list)]],
                                   [[ np.mean(self.scan_x_list)]],
-                                  [[np.mean(self.scan_y_list)]],
+                                  [[ np.mean(self.scan_y_list)]],
                                   [[ np.mean(self.scan_z_list)]],
                                   [[ np.mean(self.intensity_list)]]])
         return img_means

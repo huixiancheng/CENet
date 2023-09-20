@@ -10,7 +10,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package()
 catkin_python_setup()
 
-catkin_install_python(PROGRAMS scripts/infer.py
+catkin_install_python(PROGRAMS 
                       scripts/infer_ros.py
                       scripts/view_range_image.py
                       DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
