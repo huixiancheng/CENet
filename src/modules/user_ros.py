@@ -128,9 +128,9 @@ class User():
         if self.gpu:
             torch.cuda.empty_cache()
 
-        pointcloud2_sub = message_filters.Subscriber('/ouster/points', PointCloud2)
+        pointcloud2_sub = message_filters.Subscriber('/ouster_og_cloud', PointCloud2)
         #posestamped_sub = message_filters.Subscriber('/sc_lio_sam/pose_estimate', PoseStamped)
-        odom_sub = message_filters.Subscriber('/sc_lio_sam/mapping/odometry', Odometry)
+        odom_sub = message_filters.Subscriber('/Odometry', Odometry)
 
         #ts = message_filters.ApproximateTimeSynchronizer([pointcloud2_sub, posestamped_sub], queue_size=10, slop=0.01)
         ts = message_filters.ApproximateTimeSynchronizer([pointcloud2_sub, odom_sub], queue_size=10, slop=0.01)
