@@ -9,13 +9,19 @@ from shutil import copyfile
 import os
 import shutil
 from modules.user_ros import User
+import rospkg
 
 if __name__ == '__main__':
     splits = ["train", "valid", "test"]
 
-    model_dir = '/home/arpg/hunter_ws/src/ce_net_ros/src/dataset/final_result/1024+valid5'
-    log_dir = '/home/arpg/hunter_ws/src/ce_net_ros/src/predictions'
-    dataset_dir = '/home/arpg/hunter_ws/src/hunter_robot/hunter_robot_data/bin/cu_campus'
+    # Get the path of the ROS package
+    rospack = rospkg.RosPack()
+    ce_net_ros_path = rospack.get_path('ce_net')
+    hunter_robot_data_path = rospack.get_path('hunter_robot_data')
+
+    model_dir = f'{ce_net_ros_path}/src/dataset/final_result/1024+valid5'
+    log_dir = f'{ce_net_ros_path}/src/predictions'
+    dataset_dir = f'{hunter_robot_data_path}/bin/cu_campus'
     split = '13'
 
     # print summary of what we will do

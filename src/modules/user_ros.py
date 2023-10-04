@@ -21,6 +21,7 @@ from geometry_msgs.msg import PoseStamped
 from nav_msgs.msg import Odometry
 
 import cv2
+import rospkg
 
 class User():
     def __init__(self, ARCH, DATA, datadir, logdir, modeldir,split):
@@ -53,6 +54,10 @@ class User():
             ('ring', np.uint8)
         ])
 
+        # Get the path of the ROS package
+        rospack = rospkg.RosPack()
+        self.cu_osm_path = rospack.get_path('cu_osm')
+        
         # get the data
         from dataset.kitti.parser_ros import Parser
         self.parser = Parser(root=self.datadir,
@@ -304,6 +309,7 @@ class User():
             print(f"predictions numpy:\n {pred_np}")
 
             label_filename = f"{self.header.stamp.secs}_{self.header.stamp.nsecs}.label"
-            pred_np.tofile(f"/home/arpg/hunter_ws/src/cu_osm/bin_data/{label_filename}")
+
+            pred_np.tofile(f"{self.cu_osm_path}/bin_data/{label_filename}")
             
             #self.publish(pred_np)
